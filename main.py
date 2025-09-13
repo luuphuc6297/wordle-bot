@@ -5,12 +5,12 @@ import json
 import sys
 from typing import Optional
 
-from utils.logging_config import setup_logging, get_logger
 from config.settings import settings
-from core.use_cases.orchestrator import Orchestrator
-from core.use_cases.benchmark_engine import BenchmarkEngine
 from core.use_cases.analytics_engine import AnalyticsEngine
+from core.use_cases.benchmark_engine import BenchmarkEngine
+from core.use_cases.orchestrator import Orchestrator
 from infrastructure.data.word_lexicon import WordLexicon
+from utils.logging_config import get_logger, setup_logging
 
 
 def main() -> int:
@@ -58,7 +58,7 @@ def main() -> int:
             return 1
 
         # Output results
-        if hasattr(args, 'output') and args.output:
+        if hasattr(args, "output") and args.output:
             save_results_to_file(result, args.output)
         else:
             output_results(result, args.output_format)
@@ -100,7 +100,7 @@ Examples:
     parser.add_argument(
         "command",
         choices=["solve", "simulate", "analyze", "benchmark", "analytics"],
-        help="Command to execute"
+        help="Command to execute",
     )
 
     parser.add_argument("word", nargs="?", help="Word to analyze (for analyze command)")
@@ -151,23 +151,23 @@ Examples:
     parser.add_argument(
         "--no-display", action="store_true", help="Disable rich console display"
     )
-    
+
     parser.add_argument(
         "--output", "-o", help="Output file for benchmark results (JSON format)"
     )
-    
+
     parser.add_argument(
         "--analysis-type",
         choices=["difficulty", "patterns", "positions", "strategy"],
         default="strategy",
-        help="Type of analysis to run (default: strategy)"
+        help="Type of analysis to run (default: strategy)",
     )
-    
+
     parser.add_argument(
         "--sample-size",
         type=int,
         default=20,
-        help="Sample size for analysis (default: 20)"
+        help="Sample size for analysis (default: 20)",
     )
 
     parser.add_argument("--version", action="version", version="Wordle Bot 1.0.0")
@@ -293,54 +293,55 @@ def run_benchmark(orchestrator: Orchestrator, args) -> dict:
 
 def run_analytics(orchestrator: Orchestrator, args) -> dict:
     """Run advanced analytics.
-    
+
     Args:
         orchestrator: The orchestrator instance
         args: Command line arguments
-        
+
     Returns:
         Analytics results
     """
     logger = get_logger(__name__)
-    
+
     # Create analytics engine
     analytics = AnalyticsEngine()
-    
+
     logger.info(f"Running {args.analysis_type} analysis...")
-    
+
     if args.analysis_type == "difficulty":
         result = {
             "analysis_type": "word_difficulty",
-            "results": analytics.analyze_word_difficulty(sample_size=args.sample_size)
+            "results": analytics.analyze_word_difficulty(sample_size=args.sample_size),
         }
     elif args.analysis_type == "patterns":
         result = {
             "analysis_type": "feedback_patterns",
-            "results": analytics.analyze_feedback_patterns()
+            "results": analytics.analyze_feedback_patterns(),
         }
     elif args.analysis_type == "positions":
         result = {
             "analysis_type": "position_analysis",
-            "results": analytics.analyze_position_patterns()
+            "results": analytics.analyze_position_patterns(),
         }
     else:  # strategy
         result = {
             "analysis_type": "strategy_insights",
-            "results": analytics.generate_strategy_insights()
+            "results": analytics.generate_strategy_insights(),
         }
-    
+
     return result
 
 
 def save_results_to_file(results: dict, output_file: str) -> None:
     """Save results to a JSON file.
-    
+
     Args:
         results: Results dictionary to save
         output_file: Path to output file
     """
     import json
-    with open(output_file, 'w') as f:
+
+    with open(output_file, "w") as f:
         json.dump(results, f, indent=2, default=str)
     print(f"Results saved to: {output_file}")
 
@@ -407,46 +408,56 @@ def output_results(results: dict, output_format: str) -> None:
                 print(f"  Efficiency Score: {analysis['efficiency_score']:.2f}")
                 print(f"  Speed Score: {analysis['speed_score']:.2f}")
 
-                if analysis['recommendations']:
+                if analysis["recommendations"]:
                     print("\n💡 Recommendations:")
-                    for rec in analysis['recommendations']:
+                    for rec in analysis["recommendations"]:
                         print(f"  • {rec}")
-        
+
         elif "analysis_type" in results:
             # Analytics results
             analysis_type = results["analysis_type"]
             data = results["results"]
-            
+
             print(f"\n🔬 {analysis_type.replace('_', ' ').title()} Analysis")
             print("=" * 50)
-            
+
             if analysis_type == "word_difficulty":
                 print(f"📊 Analyzed {len(data)} words:")
                 for i, word_data in enumerate(data[:10], 1):
                     difficulty = word_data.difficulty_score
                     avg_guesses = word_data.avg_guesses
                     success_rate = word_data.success_rate
-                    print(f"  {i:2d}. {word_data.word}: {difficulty:.2f} difficulty | {avg_guesses:.1f} avg guesses | {success_rate:.1%} success")
-            
+                    print(
+                        f"  {i:2d}. {word_data.word}: {difficulty:.2f} difficulty | {avg_guesses:.1f} avg guesses | {success_rate:.1%} success"
+                    )
+
             elif analysis_type == "position_analysis":
                 for pos_data in data:
                     print(f"\n📍 Position {pos_data.position}:")
                     print(f"  Entropy: {pos_data.entropy_contribution:.2f}")
                     print(f"  Common: {', '.join(pos_data.common_patterns[:3])}")
-            
+
             elif analysis_type == "strategy_insights":
                 insights = data
                 print(f"\n🎯 Position Insights:")
-                print(f"  Most informative: Position {insights['position_insights']['most_informative_position']}")
-                print(f"  Least informative: Position {insights['position_insights']['least_informative_position']}")
-                
+                print(
+                    f"  Most informative: Position {insights['position_insights']['most_informative_position']}"
+                )
+                print(
+                    f"  Least informative: Position {insights['position_insights']['least_informative_position']}"
+                )
+
                 print(f"\n📈 Pattern Insights:")
-                print(f"  Most effective: {insights['pattern_insights']['most_effective_pattern']}")
-                print(f"  Most common: {insights['pattern_insights']['most_common_pattern']}")
-                
-                if insights['recommendations']:
+                print(
+                    f"  Most effective: {insights['pattern_insights']['most_effective_pattern']}"
+                )
+                print(
+                    f"  Most common: {insights['pattern_insights']['most_common_pattern']}"
+                )
+
+                if insights["recommendations"]:
                     print(f"\n💡 Strategic Recommendations:")
-                    for rec in insights['recommendations']:
+                    for rec in insights["recommendations"]:
                         print(f"  • {rec}")
 
 

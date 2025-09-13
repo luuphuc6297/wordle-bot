@@ -1,7 +1,8 @@
 """GameStateManager - Manages game state and filters possible answers based on feedback."""
 
 from typing import List
-from core.domain.models import GameState, GuessResult, FeedbackType
+
+from core.domain.models import FeedbackType, GameState, GuessResult
 from core.use_cases.solver_engine import SolverEngine
 from infrastructure.data.word_lexicon import WordLexicon
 

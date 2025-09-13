@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 from core.use_cases.game_state_manager import GameStateManager
 from core.use_cases.solver_engine import SolverEngine

@@ -1,16 +1,16 @@
 """Benchmark engine for testing Wordle bot performance across multiple games."""
 
 import random
-import time
 import statistics
-from typing import Dict, List, Any, Optional
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Dict, List, Optional
 
-from core.use_cases.orchestrator import Orchestrator
-from core.use_cases.game_state_manager import GameStateManager
-from core.use_cases.solver_engine import SolverEngine
 from core.domain.models import GuessResult
+from core.use_cases.game_state_manager import GameStateManager
+from core.use_cases.orchestrator import Orchestrator
+from core.use_cases.solver_engine import SolverEngine
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import BenchmarkDisplay
 from utils.logging_config import get_logger

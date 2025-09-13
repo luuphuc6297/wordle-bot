@@ -1,13 +1,14 @@
 """GameClient - API adapter for Wordle game communication."""
 
-import requests
 import json
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
+import requests
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
 from core.domain.models import GuessResult
@@ -15,7 +16,9 @@ from core.domain.models import GuessResult
 
 class WordleAPIError(Exception):
     """Custom exception for Wordle API errors."""
+
     pass
+
 
 class GameClient:
     """API client for communicating with the Wordle game server."""

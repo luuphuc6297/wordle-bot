@@ -1,13 +1,14 @@
 """Advanced analytics engine for Wordle bot performance analysis."""
 
-import numpy as np
 import statistics
-from typing import Dict, List, Tuple, Any
 from collections import defaultdict
 from dataclasses import dataclass
+from typing import Any, Dict, List, Tuple
 
-from core.use_cases.solver_engine import SolverEngine
+import numpy as np
+
 from core.use_cases.game_state_manager import GameStateManager
+from core.use_cases.solver_engine import SolverEngine
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.logging_config import get_logger
 
