@@ -2,7 +2,7 @@
 
 import time
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from core.domain.models import FeedbackType, GuessResult
 

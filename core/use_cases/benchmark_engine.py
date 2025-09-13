@@ -4,12 +4,10 @@ import random
 import statistics
 import time
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 
 from core.domain.models import GuessResult
 from core.use_cases.game_state_manager import GameStateManager
-from core.use_cases.orchestrator import Orchestrator
 from core.use_cases.solver_engine import SolverEngine
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import BenchmarkDisplay

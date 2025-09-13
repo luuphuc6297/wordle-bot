@@ -2,15 +2,14 @@
 
 import math
 import os
-import threading
 import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, List, Tuple
+from typing import List
 
 import numpy as np
 
-from core.domain.models import EntropyCalculation, FeedbackType
+from core.domain.models import EntropyCalculation
 from infrastructure.data.word_lexicon import WordLexicon
 
 

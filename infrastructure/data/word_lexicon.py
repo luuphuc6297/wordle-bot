@@ -1,6 +1,5 @@
 """Word Lexicon module for loading and managing Wordle word lists."""
 
-import os
 from pathlib import Path
 from typing import List, Set
 

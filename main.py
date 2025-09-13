@@ -9,7 +9,6 @@ from config.settings import settings
 from core.use_cases.analytics_engine import AnalyticsEngine
 from core.use_cases.benchmark_engine import BenchmarkEngine
 from core.use_cases.orchestrator import Orchestrator
-from infrastructure.data.word_lexicon import WordLexicon
 from utils.logging_config import get_logger, setup_logging
 
 

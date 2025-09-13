@@ -39,4 +39,4 @@ jobs:
     - name: Test CLI
       run: |
         python main.py --help
-        python main.py simulate --target TESTS --no-display
+        python main.py simulate --target ABOUT --no-display

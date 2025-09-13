@@ -16,7 +16,7 @@ isort . --profile black
 # Remove unused imports and fix basic issues
 echo "Running autoflake..."
 pip install autoflake > /dev/null 2>&1
-autoflake --remove-all-unused-imports --remove-unused-variables --in-place --recursive .
+autoflake --remove-all-unused-imports --remove-unused-variables --remove-duplicate-keys --expand-star-imports --in-place --recursive . --exclude=venv,__pycache__,.pytest_cache
 
 echo "✅ Code formatting complete!"
 
