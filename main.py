@@ -58,7 +58,10 @@ def main() -> int:
             return 1
 
         # Output results
-        output_results(result, args.output_format)
+        if hasattr(args, 'output') and args.output:
+            save_results_to_file(result, args.output)
+        else:
+            output_results(result, args.output_format)
 
         return 0
 
@@ -147,6 +150,10 @@ Examples:
 
     parser.add_argument(
         "--no-display", action="store_true", help="Disable rich console display"
+    )
+    
+    parser.add_argument(
+        "--output", "-o", help="Output file for benchmark results (JSON format)"
     )
     
     parser.add_argument(
@@ -323,6 +330,19 @@ def run_analytics(orchestrator: Orchestrator, args) -> dict:
         }
     
     return result
+
+
+def save_results_to_file(results: dict, output_file: str) -> None:
+    """Save results to a JSON file.
+    
+    Args:
+        results: Results dictionary to save
+        output_file: Path to output file
+    """
+    import json
+    with open(output_file, 'w') as f:
+        json.dump(results, f, indent=2, default=str)
+    print(f"Results saved to: {output_file}")
 
 
 def output_results(results: dict, output_format: str) -> None:
