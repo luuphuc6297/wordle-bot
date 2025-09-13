@@ -17,7 +17,6 @@ class WordleAPIError(Exception):
     """Custom exception for Wordle API errors."""
 
 
-
 class GameClient:
     """API client for communicating with the Wordle game server."""
 
