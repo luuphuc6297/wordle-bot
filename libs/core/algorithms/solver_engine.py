@@ -42,60 +42,57 @@ class SolverEngine:
         Returns:
             The optimal guess word
         """
-        # Use pre-computed first guess
         if turn == 1:
             return self.OPTIMAL_FIRST_GUESS
 
-        # If only one answer remains, guess it
-        if len(possible_answers) == 1:
-            return possible_answers[0]
-
-        # If very few answers remain, just pick the first one
         if len(possible_answers) <= 2:
             return possible_answers[0]
 
+        return self._find_optimal_guess(possible_answers)
+
+    def _find_optimal_guess(self, possible_answers: List[str]) -> str:
+        """Find optimal guess using parallel entropy calculation."""
         possible_answers_array = np.array(possible_answers)
-
-        # Calculate entropy for all potential guesses within time budget
-        best_word = possible_answers[0]  # Fallback
+        best_word = possible_answers[0]
         best_entropy = 0.0
-
         start_time = time.time()
 
-        # Use threading for parallelization (NumPy releases GIL)
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            # Submit entropy calculation tasks
-            futures = {}
-            for guess_word in self._all_guesses:
-                if (
-                    time.time() - start_time > self.time_budget * 0.9
-                ):  # Leave some buffer
-                    break
-
-                future = executor.submit(
-                    self._calculate_entropy_for_word, guess_word, possible_answers_array
-                )
-                futures[future] = guess_word
-
-            # Collect results as they complete
-            for future in as_completed(futures, timeout=self.time_budget):
-                try:
-                    entropy = future.result()
-                    word = futures[future]
-
-                    if entropy > best_entropy:
-                        best_entropy = entropy
-                        best_word = word
-
-                except Exception:
-                    # Skip failed calculations
-                    continue
-
-                # Check time budget
-                if time.time() - start_time > self.time_budget:
-                    break
+            futures = self._submit_entropy_tasks(
+                executor, possible_answers_array, start_time
+            )
+            best_word, best_entropy = self._collect_entropy_results(
+                futures, best_word, best_entropy, start_time
+            )
 
         return best_word
+
+    def _submit_entropy_tasks(self, executor, possible_answers_array, start_time):
+        """Submit entropy calculation tasks to executor."""
+        futures = {}
+        for guess_word in self._all_guesses:
+            if time.time() - start_time > self.time_budget * 0.9:
+                break
+            future = executor.submit(
+                self._calculate_entropy_for_word, guess_word, possible_answers_array
+            )
+            futures[future] = guess_word
+        return futures
+
+    def _collect_entropy_results(self, futures, best_word, best_entropy, start_time):
+        """Collect entropy calculation results."""
+        for future in as_completed(futures, timeout=self.time_budget):
+            try:
+                entropy = future.result()
+                word = futures[future]
+                if entropy > best_entropy:
+                    best_entropy = entropy
+                    best_word = word
+            except Exception:
+                continue
+            if time.time() - start_time > self.time_budget:
+                break
+        return best_word, best_entropy
 
     def _calculate_entropy_for_word(
         self, guess_word: str, possible_answers: np.ndarray

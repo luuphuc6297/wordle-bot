@@ -346,7 +346,7 @@ class AnalyticsEngine:
                     word, self.lexicon.answers
                 )
                 word_entropies.append((word, entropy_calc.entropy))
-            except:
+            except Exception:
                 continue
 
         word_entropies.sort(key=lambda x: x[1], reverse=True)
@@ -369,7 +369,7 @@ class AnalyticsEngine:
                 * 0.7
             )
             return (first_entropy + second_entropy) / 2
-        except:
+        except Exception:
             return 0.0
 
     def _generate_recommendations(
@@ -384,7 +384,7 @@ class AnalyticsEngine:
         most_informative = max(position_analysis, key=lambda x: x.entropy_contribution)
         recommendations.append(
             f"Focus on position {most_informative.position} optimization - "
-            f"highest entropy contribution ({most_informative.entropy_contribution:.2f})"
+            f"entropy contribution ({most_informative.entropy_contribution:.2f})"
         )
 
         # Pattern-based recommendations
@@ -395,9 +395,7 @@ class AnalyticsEngine:
                 f"average effectiveness: {best_pattern[1]['avg_effectiveness']:.2%}"
             )
 
-        recommendations.append(
-            "Consider implementing adaptive first-guess selection based on word difficulty"
-        )
+        recommendations.append("Consider adaptive first-guess selection")
         recommendations.append(
             "Implement pattern-based pruning for faster entropy calculations"
         )

@@ -65,7 +65,8 @@ class WordLexicon:
             raise ValueError(f"Too few answers loaded: {len(self._answers)}")
         if len(self._allowed_guesses) < len(self._answers):
             raise ValueError(
-                f"Allowed guesses ({len(self._allowed_guesses)}) should be >= answers ({len(self._answers)})"
+                f"Allowed guesses ({len(self._allowed_guesses)}) should be >= "
+                f"answers ({len(self._answers)})"
             )
 
     @property

@@ -4,12 +4,8 @@ from typing import Any, Dict
 
 import requests
 from shared.domain.models import GuessResult
-from tenacity import (
-  retry,
-  retry_if_exception_type,
-  stop_after_attempt,
-  wait_exponential,
-)
+from tenacity import (retry, retry_if_exception_type, stop_after_attempt,
+                      wait_exponential)
 
 
 class WordleAPIError(Exception):
@@ -98,7 +94,7 @@ class GameClient:
             # Expected format: {"result": "++x--", ...}
             if "result" not in data:
                 raise WordleAPIError(
-                    f"Invalid API response format: missing 'result' field"
+                    "Invalid API response format: missing 'result' field"
                 )
 
             result_string = data["result"]

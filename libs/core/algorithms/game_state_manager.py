@@ -1,4 +1,4 @@
-"""GameStateManager - Manages game state and filters possible answers based on feedback."""
+"""GameStateManager - Manages game state and filters answers."""
 
 from typing import List, Optional
 

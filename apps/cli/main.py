@@ -7,7 +7,6 @@ from typing import Optional
 import typer
 from core.algorithms.analytics_engine import AnalyticsEngine
 from core.algorithms.benchmark_engine import BenchmarkEngine
-
 # Import from workspace packages
 from core.algorithms.orchestrator import Orchestrator
 from shared.config.settings import settings
@@ -149,7 +148,8 @@ def analyze(
                         line.strip().upper() for line in f if line.strip()
                     ]
                 logger.info(
-                    f"Loaded {len(possible_answers)} possible answers from {answers_file}"
+                    f"Loaded {len(possible_answers)} possible answers "
+                    f"from {answers_file}"
                 )
             except Exception as e:
                 typer.echo(f"Error: Failed to load answers file: {e}")
@@ -288,7 +288,7 @@ def output_results(results: dict, output_format: str) -> None:
             # Game solution results
             game_result = results["game_result"]
             if game_result["solved"]:
-                typer.echo(f"✅ PUZZLE SOLVED!")
+                typer.echo("✅ PUZZLE SOLVED!")
                 typer.echo(f"Answer: {game_result['final_answer']}")
                 typer.echo(f"Turns: {game_result['total_turns']}")
             else:

@@ -54,7 +54,8 @@ class Settings:
             "formatters": {
                 "standard": {"format": cls.LOG_FORMAT},
                 "json": {
-                    "format": '{"timestamp": "%(asctime)s", "logger": "%(name)s", "level": "%(levelname)s", "message": "%(message)s"}',
+                    "format": '{"timestamp": "%(asctime)s", "logger": "%(name)s", '
+                    '"level": "%(levelname)s", "message": "%(message)s"}',
                     "datefmt": "%Y-%m-%dT%H:%M:%S",
                 },
             },

@@ -1,12 +1,7 @@
 """Domain models and entities."""
 
-from .models import (
-  EntropyCalculation,
-  FeedbackType,
-  GameState,
-  GuessResult,
-  LetterFeedback,
-)
+from .models import (EntropyCalculation, FeedbackType, GameState, GuessResult,
+                     LetterFeedback)
 
 __all__ = [
     "FeedbackType",

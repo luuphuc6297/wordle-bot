@@ -84,7 +84,8 @@ class GameDisplay:
 
         if remaining_count is not None:
             print(
-                f"[DEBUG] {timestamp} - Searching among {remaining_count:,} possible answers"
+                f"[DEBUG] {timestamp} - Searching among "
+                f"{remaining_count:,} possible answers"
             )
 
     def show_feedback(self, guess_result: GuessResult, remaining_count: int):
@@ -102,7 +103,8 @@ class GameDisplay:
 
         print(f"[INFO] {timestamp} - Feedback: [{', '.join(emoji_feedback)}]")
         print(
-            f"[INFO] {timestamp} - Pattern: {guess_result.guess} -> {''.join(symbol_feedback)}"
+            f"[INFO] {timestamp} - Pattern: {guess_result.guess} -> "
+            f"{''.join(symbol_feedback)}"
         )
         print(f"[INFO] {timestamp} - Remaining possible words: {remaining_count}")
 
@@ -121,7 +123,8 @@ class GameDisplay:
         )
 
         print(
-            f"\n🎉 [SUCCESS] {timestamp} - Game {self.game_id} won in {total_guesses} guesses!"
+            f"\n🎉 [SUCCESS] {timestamp} - Game {self.game_id} won in "
+            f"{total_guesses} guesses!"
         )
         print(f"⏱️  Game completed in {game_duration:.2f} seconds")
 
@@ -150,7 +153,8 @@ class GameDisplay:
         )
 
         print(
-            f"\n💔 [FAILURE] {timestamp} - Game {self.game_id} lost after {total_guesses} guesses"
+            f"\n💔 [FAILURE] {timestamp} - Game {self.game_id} lost after "
+            f"{total_guesses} guesses"
         )
         if target_word:
             print(f"🎯 The correct word was: '{target_word}'")

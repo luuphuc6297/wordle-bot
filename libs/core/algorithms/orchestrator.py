@@ -45,7 +45,7 @@ class Orchestrator:
         )
 
         self.logger.info(
-            f"Orchestrator initialized with {len(self.lexicon.answers)} possible answers"
+            f"Orchestrator initialized with {len(self.lexicon.answers)} answers"
         )
 
     def solve_daily_puzzle(self) -> Dict[str, Any]:
@@ -67,7 +67,7 @@ class Orchestrator:
                 turn_number = current_state.turn
 
                 self.logger.info(
-                    f"Turn {turn_number}: {len(current_state.possible_answers)} possible answers remaining"
+                    f"Turn {turn_number}: {len(current_state.possible_answers)} answers"
                 )
 
                 # Calculate optimal guess
@@ -85,7 +85,8 @@ class Orchestrator:
                 try:
                     guess_result = self.game_client.submit_guess(best_guess)
                     self.logger.info(
-                        f"Guess '{guess_result.guess}' -> {guess_result.to_pattern_string()} "
+                        f"Guess '{guess_result.guess}' -> "
+                        f"{guess_result.to_pattern_string()}"
                         f"(Correct: {guess_result.is_correct})"
                     )
 
@@ -163,13 +164,15 @@ class Orchestrator:
         # Log final result
         if self.game_state_manager.is_solved():
             self.logger.info(
-                f"PUZZLE SOLVED! Answer: {final_summary['game_result']['final_answer']} "
+                f"PUZZLE SOLVED! Answer: "
+                f"{final_summary['game_result']['final_answer']}"
                 f"in {final_summary['game_result']['total_turns']} turns "
                 f"({final_summary['performance_metrics']['total_game_time_seconds']}s)"
             )
         else:
             self.logger.warning(
-                f"Puzzle failed after {final_summary['game_result']['total_turns']} turns "
+                f"Puzzle failed after "
+                f"{final_summary['game_result']['total_turns']} turns "
                 f"({final_summary['performance_metrics']['total_game_time_seconds']}s)"
             )
 
@@ -182,7 +185,7 @@ class Orchestrator:
 
         Args:
             guess: The word to analyze
-            possible_answers: Optional list of possible answers. If None, uses all answers.
+            possible_answers: Optional list of answers. If None, uses all answers.
 
         Returns:
             Analysis results including entropy calculation
