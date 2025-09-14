@@ -4,7 +4,7 @@ import math
 import os
 import time
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 
 import numpy as np
 
@@ -15,22 +15,24 @@ from infrastructure.data.word_lexicon import WordLexicon
 class SolverEngine:
     """Core solver using information-theoretic approach with entropy maximization."""
 
-    OPTIMAL_FIRST_GUESS = "SALET"  # Pre-computed optimal first guess
+    OPTIMAL_FIRST_GUESS: str = "SALET"  # Pre-computed optimal first guess
 
-    def __init__(self, time_budget_seconds: float = 5.0, max_workers: int = None):
+    def __init__(
+        self, time_budget_seconds: float = 5.0, max_workers: int | None = None
+    ):
         """Initialize the solver engine.
 
         Args:
             time_budget_seconds: Maximum time allowed for guess calculation
             max_workers: Number of threads for parallel computation (None = auto)
         """
-        self.time_budget = time_budget_seconds
-        self.max_workers = max_workers or min(8, (os.cpu_count() or 1) + 4)
-        self.lexicon = WordLexicon()
+        self.time_budget: float = time_budget_seconds
+        self.max_workers: int = max_workers or min(8, (os.cpu_count() or 1) + 4)
+        self.lexicon: WordLexicon = WordLexicon()
 
         # Convert to numpy arrays for better performance
-        self._all_guesses = np.array(self.lexicon.allowed_guesses)
-        self._all_answers = np.array(self.lexicon.answers)
+        self._all_guesses: np.ndarray = np.array(self.lexicon.allowed_guesses)
+        self._all_answers: np.ndarray = np.array(self.lexicon.answers)
 
     def find_best_guess(self, possible_answers: list[str], turn: int = 1) -> str:
         """Find the best guess using entropy maximization.
@@ -54,19 +56,20 @@ class SolverEngine:
         if len(possible_answers) <= 2:
             return possible_answers[0]
 
-        possible_answers_array = np.array(possible_answers)
+        possible_answers_array: np.ndarray = np.array(possible_answers)
 
         # Calculate entropy for all potential guesses within time budget
-        best_word = possible_answers[0]  # Fallback
-        best_entropy = 0.0
+        best_word: str = possible_answers[0]  # Fallback
+        best_entropy: float = 0.0
 
         start_time = time.time()
 
         # Use threading for parallelization (NumPy releases GIL)
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             # Submit entropy calculation tasks
-            futures = {}
-            for guess_word in self._all_guesses:
+            futures: dict[Future[float], str] = {}
+            for guess_word in self._all_guesses.tolist():
+                guess_word: str = str(guess_word)
                 if (
                     time.time() - start_time > self.time_budget * 0.9
                 ):  # Leave some buffer
@@ -78,14 +81,14 @@ class SolverEngine:
                 futures[future] = guess_word
 
             # Collect results as they complete
-            for future in as_completed(futures, timeout=self.time_budget):
+            for future in as_completed(futures, timeout=self.time_budget):  # type: ignore
                 try:
-                    entropy = future.result()
-                    word = futures[future]
+                    entropy: float = future.result()  # type: ignore
+                    word: str = futures[future]  # type: ignore
 
                     if entropy > best_entropy:
-                        best_entropy = entropy
-                        best_word = word
+                        best_entropy: float = entropy
+                        best_word: str = word
 
                 except Exception:
                     # Skip failed calculations
@@ -109,11 +112,12 @@ class SolverEngine:
         Returns:
             Entropy value in bits
         """
-        pattern_counts = defaultdict(int)
+        pattern_counts: defaultdict[str, int] = defaultdict(int)
 
         # Simulate feedback for each possible answer
-        for answer in possible_answers:
-            pattern = self._simulate_feedback(guess_word, answer)
+        for answer in possible_answers.tolist():
+            answer: str = str(answer)
+            pattern: str = self._simulate_feedback(guess_word, answer)
             pattern_counts[pattern] += 1
 
         # Calculate Shannon entropy
@@ -149,7 +153,7 @@ class SolverEngine:
         feedback = ["-"] * 5
 
         # Count letter frequencies in the answer
-        answer_letter_counts = defaultdict(int)
+        answer_letter_counts: defaultdict[str, int] = defaultdict(int)
         for letter in answer:
             answer_letter_counts[letter] += 1
 
@@ -169,6 +173,18 @@ class SolverEngine:
 
         return "".join(feedback)
 
+    def simulate_feedback(self, guess: str, answer: str) -> str:
+        """Public method to simulate Wordle feedback for a guess against an answer.
+
+        Args:
+            guess: The guessed word
+            answer: The actual answer word
+
+        Returns:
+            Feedback pattern string (e.g., "++o--")
+        """
+        return self._simulate_feedback(guess, answer)
+
     def calculate_detailed_entropy(
         self, guess_word: str, possible_answers: list[str]
     ) -> EntropyCalculation:
@@ -183,13 +199,14 @@ class SolverEngine:
         """
         start_time = time.time()
 
-        possible_answers_array = np.array(possible_answers)
+        possible_answers_array: np.ndarray = np.array(possible_answers)
         entropy = self._calculate_entropy_for_word(guess_word, possible_answers_array)
 
         # Count unique patterns
-        patterns = set()
+        patterns: set[str] = set()
         for answer in possible_answers:
-            pattern = self._simulate_feedback(guess_word, answer)
+            answer: str = str(answer)
+            pattern: str = self._simulate_feedback(guess_word, answer)
             patterns.add(pattern)
 
         calculation_time = time.time() - start_time

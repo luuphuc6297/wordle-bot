@@ -1,26 +1,41 @@
 """GameStateManager - Manages game state and filters possible answers based on feedback."""
 
+from typing import TypedDict
+
 from core.domain.models import FeedbackType, GameState, GuessResult
 from core.use_cases.solver_engine import SolverEngine
 from infrastructure.data.word_lexicon import WordLexicon
 
 
+class GameSummaryDict(TypedDict):
+    """Type definition for game summary dictionary."""
+
+    turn: int
+    total_guesses: int
+    remaining_answers: int
+    is_solved: bool
+    is_failed: bool
+    remaining_turns: int
+    guesses: list[dict[str, str | bool]]
+    possible_answers: list[str]
+
+
 class GameStateManager:
     """Manages the current game state and filters possible answers."""
 
-    def __init__(self, initial_answers: list[str] = None):
+    def __init__(self, initial_answers: list[str] | None = None):
         """Initialize game state manager.
 
         Args:
             initial_answers: Optional list of initial possible answers.
             If None, uses all possible answers from lexicon.
         """
-        self.lexicon = WordLexicon()
-        self.solver = SolverEngine()
+        self.lexicon: WordLexicon = WordLexicon()
+        self.solver: SolverEngine = SolverEngine()
 
         initial_possible_answers = initial_answers or self.lexicon.answers
 
-        self.game_state = GameState(
+        self.game_state: GameState = GameState(
             turn=1,
             possible_answers=initial_possible_answers.copy(),
             is_solved=False,
@@ -52,7 +67,7 @@ class GameStateManager:
         guess = guess_result.guess
         feedback = guess_result.feedback
 
-        filtered_answers = []
+        filtered_answers: list[str] = []
 
         for answer in self.game_state.possible_answers:
             if self._is_answer_consistent(guess, feedback, answer):
@@ -74,7 +89,7 @@ class GameStateManager:
             True if the answer is consistent with the feedback
         """
         # Simulate what the feedback would be if this answer were correct
-        simulated_pattern = self.solver._simulate_feedback(guess, answer)
+        simulated_pattern = self.solver.simulate_feedback(guess, answer)
 
         # Convert our feedback to pattern string for comparison
         expected_pattern = ""
@@ -136,7 +151,7 @@ class GameStateManager:
         """
         return self.game_state.is_failed
 
-    def get_game_summary(self) -> dict:
+    def get_game_summary(self) -> GameSummaryDict:
         """Get a summary of the current game state.
 
         Returns:
@@ -157,6 +172,7 @@ class GameStateManager:
                 }
                 for guess in self.game_state.guesses
             ],
+            "possible_answers": self.game_state.possible_answers.copy(),
         }
 
     def reset_game(self) -> None:

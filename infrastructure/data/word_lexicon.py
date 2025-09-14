@@ -6,15 +6,15 @@ from pathlib import Path
 class WordLexicon:
     """Singleton class for managing Wordle word lists."""
 
-    _instance = None
-    _initialized = False
+    _instance: "WordLexicon | None" = None
+    _initialized: bool = False
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         if not self._initialized:
             self._answers: list[str] = []
             self._allowed_guesses: list[str] = []
@@ -25,14 +25,14 @@ class WordLexicon:
 
     def _load_word_lists(self):
         """Load word lists from local files."""
-        base_path = Path(__file__).parent
+        base_path: Path = Path(__file__).parent
 
         # Load answers list (~2,315 words)
-        answers_path = base_path / "answers.txt"
+        answers_path: Path = base_path / "answers.txt"
         if not answers_path.exists():
             raise FileNotFoundError(f"Answers file not found: {answers_path}")
 
-        with open(answers_path, encoding="utf-8") as f:
+        with open(file=answers_path, encoding="utf-8") as f:
             self._answers = [
                 line.strip().upper()
                 for line in f
@@ -85,7 +85,7 @@ class WordLexicon:
         """Check if word is a valid guess."""
         return word.upper() in self._allowed_set
 
-    def get_stats(self) -> dict:
+    def get_stats(self) -> dict[str, int]:
         """Get statistics about loaded word lists."""
         return {
             "total_answers": len(self._answers),

@@ -3,7 +3,8 @@
 import statistics
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any
+from logging import Logger
+from typing import TypedDict
 
 import numpy as np
 
@@ -11,6 +12,56 @@ from core.use_cases.game_state_manager import GameStateManager
 from core.use_cases.solver_engine import SolverEngine
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.logging_config import get_logger
+
+
+class PositionInsights(TypedDict):
+    """Type definition for position insights."""
+
+    most_informative_position: int
+    least_informative_position: int
+    entropy_by_position: list[float]
+
+
+class PatternInsights(TypedDict):
+    """Type definition for pattern insights."""
+
+    most_effective_pattern: str
+    most_common_pattern: str
+    pattern_diversity: int
+
+
+class StrategyInsights(TypedDict):
+    """Type definition for strategy insights."""
+
+    position_insights: PositionInsights
+    pattern_insights: PatternInsights
+    recommendations: list[str]
+
+
+class GuessInfo(TypedDict):
+    """Type definition for guess information."""
+
+    pattern: str
+    entropy: float
+    remaining_before: int
+    remaining_after: int
+
+
+class GameResult(TypedDict):
+    """Type definition for game simulation result."""
+
+    solved: bool
+    turns_used: int
+    guesses: list[GuessInfo]
+    target_word: str
+
+
+class FeedbackAnalysis(TypedDict):
+    """Type definition for feedback pattern analysis."""
+
+    most_common_patterns: list[tuple[str, int]]
+    most_effective_patterns: list[tuple[str, dict[str, float | int]]]
+    pattern_details: dict[str, dict[str, float | int]]
 
 
 @dataclass
@@ -37,13 +88,13 @@ class PositionAnalysis:
 class AnalyticsEngine:
     """Advanced analytics for Wordle bot performance and strategy optimization."""
 
-    def __init__(self):
-        self.lexicon = WordLexicon()
-        self.solver = SolverEngine(time_budget_seconds=1.0)
-        self.logger = get_logger(__name__)
+    def __init__(self) -> None:
+        self.lexicon: WordLexicon = WordLexicon()
+        self.solver: SolverEngine = SolverEngine(time_budget_seconds=1.0)
+        self.logger: Logger = get_logger(__name__)
 
     def analyze_word_difficulty(
-        self, words: list[str] = None, sample_size: int = 50
+        self, words: list[str] | None = None, sample_size: int = 50
     ) -> list[WordDifficulty]:
         """Analyze difficulty of words based on solving performance.
 
@@ -61,14 +112,14 @@ class AnalyticsEngine:
                 self.lexicon.answers, min(sample_size, len(self.lexicon.answers))
             )
 
-        difficulties = []
+        difficulties: list[WordDifficulty] = []
 
         for word in words:
             self.logger.info(f"Analyzing difficulty of: {word}")
 
             # Run multiple simulations for statistical significance
-            game_results = []
-            entropy_profiles = []
+            game_results: list[int] = []
+            entropy_profiles: list[list[float]] = []
 
             for _ in range(5):  # 5 simulations per word
                 result = self._simulate_single_game(word)
@@ -107,10 +158,10 @@ class AnalyticsEngine:
         Returns:
             Position-wise analysis of letter patterns
         """
-        position_analyses = []
+        position_analyses: list[PositionAnalysis] = []
 
         for pos in range(5):
-            letter_counts = defaultdict(int)
+            letter_counts: dict[str, int] = defaultdict(int)
             total_words = len(self.lexicon.answers)
 
             # Count letter frequencies at each position
@@ -162,7 +213,7 @@ class AnalyticsEngine:
 
         # Test combinations of first two guesses
         high_entropy_words = self._get_high_entropy_words(20)  # Top 20 words
-        combinations = []
+        combinations: list[tuple[tuple[str, str], float]] = []
 
         for first_word in high_entropy_words[:10]:
             for second_word in high_entropy_words:
@@ -176,14 +227,14 @@ class AnalyticsEngine:
         combinations.sort(key=lambda x: x[1], reverse=True)
         return [combo[0] for combo in combinations[:10]]
 
-    def analyze_feedback_patterns(self) -> dict[str, Any]:
+    def analyze_feedback_patterns(self) -> FeedbackAnalysis:
         """Analyze frequency and effectiveness of feedback patterns.
 
         Returns:
             Comprehensive feedback pattern analysis
         """
-        pattern_stats = defaultdict(int)
-        pattern_effectiveness = defaultdict(list)
+        pattern_stats: dict[str, int] = defaultdict(int)
+        pattern_effectiveness: dict[str, list[float]] = defaultdict(list)
 
         # Sample games to analyze patterns
         sample_words = self.lexicon.answers[:100]  # First 100 for speed
@@ -206,7 +257,7 @@ class AnalyticsEngine:
                     pattern_effectiveness[pattern].append(reduction_ratio)
 
         # Calculate average effectiveness per pattern
-        pattern_analysis = {}
+        pattern_analysis: dict[str, dict[str, float | int]] = {}
         for pattern, reductions in pattern_effectiveness.items():
             if reductions:
                 pattern_analysis[pattern] = {
@@ -227,7 +278,7 @@ class AnalyticsEngine:
             "pattern_details": pattern_analysis,
         }
 
-    def generate_strategy_insights(self) -> dict[str, Any]:
+    def generate_strategy_insights(self) -> StrategyInsights:
         """Generate high-level strategy insights and recommendations.
 
         Returns:
@@ -238,7 +289,7 @@ class AnalyticsEngine:
         feedback_analysis = self.analyze_feedback_patterns()
 
         # Generate insights
-        insights = {
+        insights: StrategyInsights = {
             "position_insights": {
                 "most_informative_position": max(
                     position_analysis, key=lambda x: x.entropy_contribution
@@ -264,13 +315,13 @@ class AnalyticsEngine:
 
         return insights
 
-    def _simulate_single_game(self, target_word: str) -> dict[str, Any]:
+    def _simulate_single_game(self, target_word: str) -> GameResult:
         """Simulate a single game for analysis."""
         solver = SolverEngine(time_budget_seconds=0.5)  # Fast for analysis
         game_manager = GameStateManager()
 
         turn = 1
-        guesses = []
+        guesses: list[GuessInfo] = []
 
         while not game_manager.is_game_over() and turn <= 6:
             current_answers = game_manager.get_possible_answers()
@@ -288,7 +339,7 @@ class AnalyticsEngine:
                 entropy = 0.0
 
             # Simulate feedback
-            feedback_pattern = solver._simulate_feedback(best_guess, target_word)
+            feedback_pattern = solver.simulate_feedback(best_guess, target_word)
 
             from core.domain.models import GuessResult
 
@@ -297,12 +348,10 @@ class AnalyticsEngine:
             # Record guess details
             guesses.append(
                 {
-                    "guess": best_guess,
                     "pattern": feedback_pattern,
                     "entropy": entropy,
                     "remaining_before": len(current_answers),
                     "remaining_after": 0,  # Will be updated after filtering
-                    "is_correct": guess_result.is_correct,
                 }
             )
 
@@ -327,7 +376,7 @@ class AnalyticsEngine:
             return []
 
         max_length = max(len(profile) for profile in entropy_profiles)
-        averaged = []
+        averaged: list[float] = []
 
         for i in range(max_length):
             values = [profile[i] for profile in entropy_profiles if i < len(profile)]
@@ -338,7 +387,7 @@ class AnalyticsEngine:
 
     def _get_high_entropy_words(self, n: int = 20) -> list[str]:
         """Get top N words by entropy against full answer set."""
-        word_entropies = []
+        word_entropies: list[tuple[str, float]] = []
 
         for word in self.lexicon.allowed_guesses[:100]:  # Sample for speed
             try:
@@ -375,16 +424,16 @@ class AnalyticsEngine:
     def _generate_recommendations(
         self,
         position_analysis: list[PositionAnalysis],
-        feedback_analysis: dict[str, Any],
+        feedback_analysis: FeedbackAnalysis,
     ) -> list[str]:
         """Generate strategic recommendations based on analysis."""
-        recommendations = []
+        recommendations: list[str] = []
 
         # Position-based recommendations
         most_informative = max(position_analysis, key=lambda x: x.entropy_contribution)
         recommendations.append(
             f"Focus on position {most_informative.position} optimization - "
-            f"highest entropy contribution ({most_informative.entropy_contribution:.2f})"
+            + f"highest entropy contribution ({most_informative.entropy_contribution:.2f})"
         )
 
         # Pattern-based recommendations
@@ -392,7 +441,7 @@ class AnalyticsEngine:
             best_pattern = feedback_analysis["most_effective_patterns"][0]
             recommendations.append(
                 f"Target feedback pattern '{best_pattern[0]}' - "
-                f"average effectiveness: {best_pattern[1]['avg_effectiveness']:.2%}"
+                + f"average effectiveness: {best_pattern[1]['avg_effectiveness']:.2%}"
             )
 
         recommendations.append(
