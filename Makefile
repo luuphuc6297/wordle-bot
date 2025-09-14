@@ -16,7 +16,7 @@ format-check: ## Check code formatting without fixing
 	uv run ruff format . --check
 
 test: ## Run tests
-	PYTHONPATH=libs uv run pytest libs/*/tests/ -v || echo "No tests found"
+	PYTHONPATH=libs uv run pytest libs/*/tests/ -v
 
 lint: ## Run linting
 	PYTHONPATH=libs uv run ruff check . --fix
@@ -48,6 +48,7 @@ docker-cli: ## Run CLI in Docker
 
 docker-api: ## Run API in Docker
 	docker run --rm -p 8000:8000 wordle-bot:latest uvicorn apps.api.app:app --host 0.0.0.0 --port 8000
+
 
 clean: ## Clean up temporary files
 	find . -type f -name "*.pyc" -delete

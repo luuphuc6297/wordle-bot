@@ -43,4 +43,4 @@ jobs:
 
     - name: Run tests
       run: |
-        PYTHONPATH=libs uv run pytest libs/*/tests/ -v || echo "No tests found"
+        PYTHONPATH=libs uv run pytest libs/*/tests/ -v
