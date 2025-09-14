@@ -12,13 +12,23 @@ members = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[dependency-groups]
+dev = [
+    "basedpyright>=1.31.4",
+    "pre-commit>=4.3.0",
+    "pytest>=8.4.2",
+    "ruff>=0.13.0",
+]
+
 [tool.black]
 line-length = 88
 target-version = ['py311']
+skip-string-normalization = true
 
 [tool.ruff]
 target-version = "py311"
 line-length = 88
+indent-width = 2
 extend-exclude = [
     ".git",
     "__pycache__",

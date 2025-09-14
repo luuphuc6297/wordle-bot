@@ -7,9 +7,9 @@ from .orchestrator import Orchestrator
 from .solver_engine import SolverEngine
 
 __all__ = [
-    "SolverEngine",
-    "GameStateManager",
-    "Orchestrator",
-    "AnalyticsEngine",
-    "BenchmarkEngine",
+  "SolverEngine",
+  "GameStateManager",
+  "Orchestrator",
+  "AnalyticsEngine",
+  "BenchmarkEngine",
 ]

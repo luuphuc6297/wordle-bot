@@ -7,14 +7,14 @@ help: ## Show this help message
 install: ## Install dependencies
 	uv sync --all-extras
 
-format: ## Format code with black and isort
+format: ## Format code with ruff
 	./format.sh
 
 test: ## Run tests
 	PYTHONPATH=libs uv run pytest libs/*/tests/ -v
 
 lint: ## Run linting
-	PYTHONPATH=libs uv run flake8 libs/ apps/ --max-line-length=88 --max-complexity=10
+	PYTHONPATH=libs uv run ruff check . --fix
 
 type-check: ## Run type checking
 	PYTHONPATH=libs uv run basedpyright .

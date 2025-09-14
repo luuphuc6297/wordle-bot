@@ -1,7 +1,5 @@
 """GameStateManager - Manages game state and filters answers."""
 
-from typing import List, Optional
-
 from shared.domain.models import FeedbackType, GameState, GuessResult
 from shared.infrastructure.data.word_lexicon import WordLexicon
 
@@ -9,164 +7,164 @@ from .solver_engine import SolverEngine
 
 
 class GameStateManager:
-    """Manages the current game state and filters possible answers."""
+  """Manages the current game state and filters possible answers."""
 
-    def __init__(self, initial_answers: Optional[List[str]] = None):
-        """Initialize game state manager.
+  def __init__(self, initial_answers: list[str] | None = None):
+    """Initialize game state manager.
 
-        Args:
-            initial_answers: Optional list of initial possible answers.
-            If None, uses all possible answers from lexicon.
-        """
-        self.lexicon = WordLexicon()
-        self.solver = SolverEngine()
+    Args:
+        initial_answers: Optional list of initial possible answers.
+        If None, uses all possible answers from lexicon.
+    """
+    self.lexicon = WordLexicon()
+    self.solver = SolverEngine()
 
-        initial_possible_answers = initial_answers or self.lexicon.answers
+    initial_possible_answers = initial_answers or self.lexicon.answers
 
-        self.game_state = GameState(
-            turn=1,
-            possible_answers=initial_possible_answers.copy(),
-            is_solved=False,
-            is_failed=False,
-        )
+    self.game_state = GameState(
+      turn=1,
+      possible_answers=initial_possible_answers.copy(),
+      is_solved=False,
+      is_failed=False,
+    )
 
-    def add_guess_result(self, guess_result: GuessResult) -> None:
-        """Add a guess result and update possible answers.
+  def add_guess_result(self, guess_result: GuessResult) -> None:
+    """Add a guess result and update possible answers.
 
-        Args:
-            guess_result: The result of the guess including feedback
-        """
-        # Add guess to game state
-        self.game_state.add_guess(guess_result)
+    Args:
+        guess_result: The result of the guess including feedback
+    """
+    # Add guess to game state
+    self.game_state.add_guess(guess_result)
 
-        # If game is over, don't filter further
-        if self.game_state.is_game_over:
-            return
+    # If game is over, don't filter further
+    if self.game_state.is_game_over:
+      return
 
-        # Filter possible answers based on the new feedback
-        self._filter_possible_answers(guess_result)
+    # Filter possible answers based on the new feedback
+    self._filter_possible_answers(guess_result)
 
-    def _filter_possible_answers(self, guess_result: GuessResult) -> None:
-        """Filter possible answers based on guess feedback.
+  def _filter_possible_answers(self, guess_result: GuessResult) -> None:
+    """Filter possible answers based on guess feedback.
 
-        Args:
-            guess_result: The guess result to use for filtering
-        """
-        guess = guess_result.guess
-        feedback = guess_result.feedback
+    Args:
+        guess_result: The guess result to use for filtering
+    """
+    guess = guess_result.guess
+    feedback = guess_result.feedback
 
-        filtered_answers = []
+    filtered_answers = []
 
-        for answer in self.game_state.possible_answers:
-            if self._is_answer_consistent(guess, feedback, answer):
-                filtered_answers.append(answer)
+    for answer in self.game_state.possible_answers:
+      if self._is_answer_consistent(guess, feedback, answer):
+        filtered_answers.append(answer)
 
-        self.game_state.possible_answers = filtered_answers
+    self.game_state.possible_answers = filtered_answers
 
-    def _is_answer_consistent(
-        self, guess: str, feedback: List[FeedbackType], answer: str
-    ) -> bool:
-        """Check if an answer is consistent with the given guess and feedback.
+  def _is_answer_consistent(
+    self, guess: str, feedback: list[FeedbackType], answer: str
+  ) -> bool:
+    """Check if an answer is consistent with the given guess and feedback.
 
-        Args:
-            guess: The guessed word
-            feedback: The feedback received
-            answer: The potential answer to check
+    Args:
+        guess: The guessed word
+        feedback: The feedback received
+        answer: The potential answer to check
 
-        Returns:
-            True if the answer is consistent with the feedback
-        """
-        # Simulate what the feedback would be if this answer were correct
-        simulated_pattern = self.solver._simulate_feedback(guess, answer)
+    Returns:
+        True if the answer is consistent with the feedback
+    """
+    # Simulate what the feedback would be if this answer were correct
+    simulated_pattern = self.solver._simulate_feedback(guess, answer)
 
-        # Convert our feedback to pattern string for comparison
-        expected_pattern = ""
-        for f in feedback:
-            if f == FeedbackType.CORRECT:
-                expected_pattern += "+"
-            elif f == FeedbackType.PRESENT:
-                expected_pattern += "o"
-            else:  # ABSENT
-                expected_pattern += "-"
+    # Convert our feedback to pattern string for comparison
+    expected_pattern = ""
+    for f in feedback:
+      if f == FeedbackType.CORRECT:
+        expected_pattern += "+"
+      elif f == FeedbackType.PRESENT:
+        expected_pattern += "o"
+      else:  # ABSENT
+        expected_pattern += "-"
 
-        return simulated_pattern == expected_pattern
+    return simulated_pattern == expected_pattern
 
-    def get_current_state(self) -> GameState:
-        """Get the current game state.
+  def get_current_state(self) -> GameState:
+    """Get the current game state.
 
-        Returns:
-            Current game state
-        """
-        return self.game_state
+    Returns:
+        Current game state
+    """
+    return self.game_state
 
-    def get_possible_answers(self) -> List[str]:
-        """Get the current list of possible answers.
+  def get_possible_answers(self) -> list[str]:
+    """Get the current list of possible answers.
 
-        Returns:
-            List of possible answer words
-        """
-        return self.game_state.possible_answers.copy()
+    Returns:
+        List of possible answer words
+    """
+    return self.game_state.possible_answers.copy()
 
-    def get_remaining_answers_count(self) -> int:
-        """Get the count of remaining possible answers.
+  def get_remaining_answers_count(self) -> int:
+    """Get the count of remaining possible answers.
 
-        Returns:
-            Number of possible answers remaining
-        """
-        return len(self.game_state.possible_answers)
+    Returns:
+        Number of possible answers remaining
+    """
+    return len(self.game_state.possible_answers)
 
-    def is_game_over(self) -> bool:
-        """Check if the game is over.
+  def is_game_over(self) -> bool:
+    """Check if the game is over.
 
-        Returns:
-            True if the game is solved or failed
-        """
-        return self.game_state.is_game_over
+    Returns:
+        True if the game is solved or failed
+    """
+    return self.game_state.is_game_over
 
-    def is_solved(self) -> bool:
-        """Check if the game is solved.
+  def is_solved(self) -> bool:
+    """Check if the game is solved.
 
-        Returns:
-            True if the correct word was found
-        """
-        return self.game_state.is_solved
+    Returns:
+        True if the correct word was found
+    """
+    return self.game_state.is_solved
 
-    def is_failed(self) -> bool:
-        """Check if the game failed.
+  def is_failed(self) -> bool:
+    """Check if the game failed.
 
-        Returns:
-            True if maximum turns were reached without solving
-        """
-        return self.game_state.is_failed
+    Returns:
+        True if maximum turns were reached without solving
+    """
+    return self.game_state.is_failed
 
-    def get_game_summary(self) -> dict:
-        """Get a summary of the current game state.
+  def get_game_summary(self) -> dict:
+    """Get a summary of the current game state.
 
-        Returns:
-            Dictionary containing game summary information
-        """
-        return {
-            "turn": self.game_state.turn,
-            "total_guesses": len(self.game_state.guesses),
-            "remaining_answers": len(self.game_state.possible_answers),
-            "is_solved": self.game_state.is_solved,
-            "is_failed": self.game_state.is_failed,
-            "remaining_turns": self.game_state.remaining_turns,
-            "guesses": [
-                {
-                    "guess": guess.guess,
-                    "pattern": guess.to_pattern_string(),
-                    "is_correct": guess.is_correct,
-                }
-                for guess in self.game_state.guesses
-            ],
+    Returns:
+        Dictionary containing game summary information
+    """
+    return {
+      "turn": self.game_state.turn,
+      "total_guesses": len(self.game_state.guesses),
+      "remaining_answers": len(self.game_state.possible_answers),
+      "is_solved": self.game_state.is_solved,
+      "is_failed": self.game_state.is_failed,
+      "remaining_turns": self.game_state.remaining_turns,
+      "guesses": [
+        {
+          "guess": guess.guess,
+          "pattern": guess.to_pattern_string(),
+          "is_correct": guess.is_correct,
         }
+        for guess in self.game_state.guesses
+      ],
+    }
 
-    def reset_game(self) -> None:
-        """Reset the game state for a new game."""
-        self.game_state = GameState(
-            turn=1,
-            possible_answers=self.lexicon.answers.copy(),
-            is_solved=False,
-            is_failed=False,
-        )
+  def reset_game(self) -> None:
+    """Reset the game state for a new game."""
+    self.game_state = GameState(
+      turn=1,
+      possible_answers=self.lexicon.answers.copy(),
+      is_solved=False,
+      is_failed=False,
+    )
