@@ -84,6 +84,7 @@ logs/
 # Benchmark results
 benchmark_results/
 simulation_results/
+benchmark-results.json
 
 # Analysis outputs
 analytics_cache/

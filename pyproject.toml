@@ -5,7 +5,10 @@ version = "1.0.0"
 description = "Autonomous Wordle-solving bot using entropy maximization"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "numpy>=1.24.0",
+    "pydantic>=2.0.0",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["libs"]
