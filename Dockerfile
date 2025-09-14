@@ -18,4 +18,4 @@ ENV PYTHONPATH=/app/libs
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Default command (can be overridden)
-CMD ["python", "-m", "apps.cli.main", "--help"]
+CMD ["/app/.venv/bin/python", "-m", "apps.cli.main", "--help"]
