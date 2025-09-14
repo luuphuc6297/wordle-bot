@@ -1,30 +1,4 @@
-[project]
-name = "wordle-bot"
-version = "1.0.0"
-description = "Wordle Bot Monorepo - Clean Architecture with uv workspace"
-readme = "README.md"
-authors = [
-    {name = "luuphuc6297", email = "your.email@example.com"}
-]
-maintainers = [
-    {name = "luuphuc6297", email = "your.email@example.com"}
-]
-classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Games/Entertainment :: Puzzle Games",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-]
-keywords = ["wordle", "game", "solver", "entropy", "information-theory", "puzzle"]
-requires-python = ">=3.11"
-dependencies = []
+# Root workspace configuration - no package to build
 
 [tool.uv.workspace]
 members = [

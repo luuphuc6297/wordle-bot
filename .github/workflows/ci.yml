@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, alpha ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, alpha ]
 
 jobs:
   test:
@@ -19,24 +19,39 @@ jobs:
       with:
         python-version: '3.11'
 
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest black isort flake8
+        uv sync --all-extras
 
     - name: Check code formatting
       run: |
-        black --check --diff .
-        isort --check-only --diff .
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+        uv run black --check --diff .
+        uv run isort --check-only --diff .
+        uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        uv run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+    - name: Type checking
+      run: |
+        uv run basedpyright .
 
     - name: Run tests
       run: |
-        pytest tests/ -v
+        uv run pytest libs/*/tests/ -v
 
-    - name: Test CLI
+    - name: Test CLI app
       run: |
-        python main.py --help
-        python main.py simulate --target ABOUT --no-display
+        PYTHONPATH=libs uv run python -m apps.cli.main --help
+        PYTHONPATH=libs uv run python -m apps.cli.main simulate CRANE --time-budget 1
+
+    - name: Test API app
+      run: |
+        PYTHONPATH=libs uv run python -c "from apps.api.app import app; print('API loaded successfully')"
+
+    - name: Test core algorithms
+      run: |
+        PYTHONPATH=libs uv run python -c "from libs.core.algorithms.analytics_engine import AnalyticsEngine; print('Core algorithms loaded successfully')"

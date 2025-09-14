@@ -1,0 +1,23 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+# Copy project files
+COPY pyproject.toml uv.lock ./
+COPY libs/ libs/
+COPY apps/api/ apps/api/
+
+# Install dependencies
+RUN uv sync --frozen
+
+# Set environment variables
+ENV PYTHONPATH=/app/libs
+
+# Expose port
+EXPOSE 8000
+
+# Set entrypoint
+ENTRYPOINT ["uv", "run", "uvicorn", "apps.api.app:app", "--host", "0.0.0.0", "--port", "8000"]

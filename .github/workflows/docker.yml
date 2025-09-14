@@ -1,0 +1,42 @@
+name: Docker
+
+on:
+  push:
+    branches: [ main, alpha ]
+  pull_request:
+    branches: [ main, alpha ]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build CLI Docker image
+      run: |
+        docker build -f Dockerfile.cli -t wordle-bot-cli:latest .
+
+    - name: Build API Docker image
+      run: |
+        docker build -f Dockerfile.api -t wordle-bot-api:latest .
+
+    - name: Test CLI Docker image
+      run: |
+        docker run --rm wordle-bot-cli:latest --help
+
+    - name: Test API Docker image
+      run: |
+        docker run --rm -d -p 8000:8000 --name wordle-api wordle-bot-api:latest
+        sleep 10
+        curl -f http://localhost:8000/health || exit 1
+        docker stop wordle-api
+
+    - name: Push to registry (if main branch)
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "Would push to registry here"

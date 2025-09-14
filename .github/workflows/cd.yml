@@ -18,10 +18,59 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Build Docker image
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+
+    - name: Install dependencies
       run: |
-        docker build -t wordle-bot:latest .
-        
-    - name: Test Docker image
+        uv sync --all-extras
+
+    - name: Build CLI package
       run: |
-        docker run --rm wordle-bot:latest --help
+        cd apps/cli
+        uv build
+
+    - name: Build API package
+      run: |
+        cd apps/api
+        uv build
+
+    - name: Build core package
+      run: |
+        cd libs/core
+        uv build
+
+    - name: Build shared package
+      run: |
+        cd libs/shared
+        uv build
+
+    - name: Test CLI package
+      run: |
+        PYTHONPATH=libs uv run python -m apps.cli.main --help
+
+    - name: Test API package
+      run: |
+        PYTHONPATH=libs uv run python -c "from apps.api.app import app; print('API package loaded successfully')"
+
+    - name: Create release artifacts
+      run: |
+        mkdir -p dist
+        cp apps/cli/dist/*.whl dist/ || true
+        cp apps/api/dist/*.whl dist/ || true
+        cp libs/core/dist/*.whl dist/ || true
+        cp libs/shared/dist/*.whl dist/ || true
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: wordle-bot-packages
+        path: dist/
+        retention-days: 30
