@@ -1,16 +1,17 @@
 """GameStateManager - Manages game state and filters possible answers based on feedback."""
 
-from typing import List
+from typing import List, Optional
 
-from core.domain.models import FeedbackType, GameState, GuessResult
-from core.use_cases.solver_engine import SolverEngine
-from infrastructure.data.word_lexicon import WordLexicon
+from shared.domain.models import FeedbackType, GameState, GuessResult
+from shared.infrastructure.data.word_lexicon import WordLexicon
+
+from .solver_engine import SolverEngine
 
 
 class GameStateManager:
     """Manages the current game state and filters possible answers."""
 
-    def __init__(self, initial_answers: List[str] = None):
+    def __init__(self, initial_answers: Optional[List[str]] = None):
         """Initialize game state manager.
 
         Args:

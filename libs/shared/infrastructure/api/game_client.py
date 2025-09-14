@@ -3,14 +3,13 @@
 from typing import Any, Dict
 
 import requests
+from shared.domain.models import GuessResult
 from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
+  retry,
+  retry_if_exception_type,
+  stop_after_attempt,
+  wait_exponential,
 )
-
-from core.domain.models import GuessResult
 
 
 class WordleAPIError(Exception):

@@ -6,12 +6,13 @@ import time
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
-from core.domain.models import GuessResult
-from core.use_cases.game_state_manager import GameStateManager
-from core.use_cases.solver_engine import SolverEngine
-from infrastructure.data.word_lexicon import WordLexicon
-from utils.display import BenchmarkDisplay
-from utils.logging_config import get_logger
+from shared.domain.models import GuessResult
+from shared.infrastructure.data.word_lexicon import WordLexicon
+from shared.utils.display import BenchmarkDisplay
+from shared.utils.logging_config import get_logger
+
+from .game_state_manager import GameStateManager
+from .solver_engine import SolverEngine
 
 
 class BenchmarkEngine:
@@ -256,7 +257,9 @@ class BenchmarkEngine:
         print(f"\n🚀 Running quick test with {num_games} games...")
         return self.run_benchmark(num_games, show_progress=True)
 
-    def run_stress_test(self, difficult_words: List[str] = None) -> Dict[str, Any]:
+    def run_stress_test(
+        self, difficult_words: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
         """Run stress test with known difficult words.
 
         Args:

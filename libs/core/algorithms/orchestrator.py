@@ -4,11 +4,12 @@ import logging
 import time
 from typing import Any, Dict, Optional
 
-from core.use_cases.game_state_manager import GameStateManager
-from core.use_cases.solver_engine import SolverEngine
-from infrastructure.api.game_client import GameClient, WordleAPIError
-from infrastructure.data.word_lexicon import WordLexicon
-from utils.display import GameDisplay
+from shared.infrastructure.api.game_client import GameClient, WordleAPIError
+from shared.infrastructure.data.word_lexicon import WordLexicon
+from shared.utils.display import GameDisplay
+
+from .game_state_manager import GameStateManager
+from .solver_engine import SolverEngine
 
 
 class Orchestrator:
@@ -35,7 +36,7 @@ class Orchestrator:
         self.lexicon = WordLexicon()
         self.game_client = GameClient(base_url=api_base_url)
         self.solver_engine = SolverEngine(time_budget_seconds=solver_time_budget)
-        self.game_state_manager: Optional[GameStateManager] = None
+        self.game_state_manager = GameStateManager()
 
         # Initialize display
         self.show_rich_display = show_rich_display
@@ -267,7 +268,7 @@ class Orchestrator:
             )
 
             # Create guess result
-            from core.domain.models import GuessResult
+            from shared.domain.models import GuessResult
 
             guess_result = GuessResult.from_api_response(guess, feedback_pattern)
 

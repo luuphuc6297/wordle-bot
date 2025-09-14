@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict
 
-from core.domain.models import FeedbackType, GuessResult
+from shared.domain.models import FeedbackType, GuessResult
 
 
 class GameDisplay:

@@ -8,9 +8,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
 import numpy as np
-
-from core.domain.models import EntropyCalculation
-from infrastructure.data.word_lexicon import WordLexicon
+from shared.domain.models import EntropyCalculation
+from shared.infrastructure.data.word_lexicon import WordLexicon
 
 
 class SolverEngine:

@@ -3,14 +3,14 @@
 import statistics
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+from shared.infrastructure.data.word_lexicon import WordLexicon
+from shared.utils.logging_config import get_logger
 
-from core.use_cases.game_state_manager import GameStateManager
-from core.use_cases.solver_engine import SolverEngine
-from infrastructure.data.word_lexicon import WordLexicon
-from utils.logging_config import get_logger
+from .game_state_manager import GameStateManager
+from .solver_engine import SolverEngine
 
 
 @dataclass
@@ -43,7 +43,7 @@ class AnalyticsEngine:
         self.logger = get_logger(__name__)
 
     def analyze_word_difficulty(
-        self, words: List[str] = None, sample_size: int = 50
+        self, words: Optional[List[str]] = None, sample_size: int = 50
     ) -> List[WordDifficulty]:
         """Analyze difficulty of words based on solving performance.
 
@@ -290,7 +290,7 @@ class AnalyticsEngine:
             # Simulate feedback
             feedback_pattern = solver._simulate_feedback(best_guess, target_word)
 
-            from core.domain.models import GuessResult
+            from shared.domain.models import GuessResult
 
             guess_result = GuessResult.from_api_response(best_guess, feedback_pattern)
 

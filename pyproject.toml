@@ -1,13 +1,8 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [project]
 name = "wordle-bot"
 version = "1.0.0"
-description = "An autonomous Wordle bot using information theory and entropy maximization"
+description = "Wordle Bot Monorepo - Clean Architecture with uv workspace"
 readme = "README.md"
-license = {file = "LICENSE"}
 authors = [
     {name = "luuphuc6297", email = "your.email@example.com"}
 ]
@@ -29,67 +24,28 @@ classifiers = [
 ]
 keywords = ["wordle", "game", "solver", "entropy", "information-theory", "puzzle"]
 requires-python = ">=3.11"
-dependencies = [
-    "numpy>=1.24.0",
-    "requests>=2.28.0",
-    "rich>=13.0.0",
-    "click>=8.1.0",
+dependencies = []
+
+[tool.uv.workspace]
+members = [
+    "apps/api",
+    "apps/cli", 
+    "libs/core",
+    "libs/shared"
 ]
 
-[project.optional-dependencies]
-test = [
-    "pytest>=7.0.0",
-]
-format = [
-    "black>=23.0.0",
-    "isort>=5.12.0",
-    "flake8>=6.0.0",
-]
-
-[project.urls]
-Homepage = "https://github.com/luuphuc6297/wordle-bot"
-Repository = "https://github.com/luuphuc6297/wordle-bot.git"
-Issues = "https://github.com/luuphuc6297/wordle-bot/issues"
-Documentation = "https://github.com/luuphuc6297/wordle-bot/blob/main/README.md"
-
-[project.scripts]
-wordle-bot = "wordle_bot.main:main"
-
-[tool.hatch.build.targets.wheel]
-packages = ["wordle_bot"]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 88
 target-version = ['py311']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 88
-known_first_party = ["wordle_bot"]
-
-[tool.flake8]
-max-line-length = 88
-max-complexity = 10
-select = ["E", "F", "W", "C90"]
-ignore = ["E203", "W503"]
-exclude = [
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+extend-exclude = [
     ".git",
     "__pycache__",
     ".pytest_cache",
@@ -98,6 +54,24 @@ exclude = [
     "dist",
     "*.egg-info",
 ]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E203",  # whitespace before ':'
+    "E501",  # line too long, handled by formatter
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["core", "shared", "api", "cli"]
 
 [tool.mypy]
 python_version = "3.11"
@@ -120,19 +94,19 @@ ignore_errors = true
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-testpaths = ["tests"]
+testpaths = ["libs/*/tests", "apps/*/tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
     "-v",
-    "--strict-markers",
+    "--strict-markers", 
     "--strict-config",
 ]
 
 [tool.coverage.run]
-source = ["wordle_bot"]
-omit = ["tests/*", "wordle_bot/__main__.py"]
+source = ["libs", "apps"]
+omit = ["*/tests/*", "*/__main__.py"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -147,10 +121,3 @@ exclude_lines = [
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
-
-[tool.bandit]
-exclude_dirs = ["tests"]
-skips = ["B101"]  # Skip assert_used test
-
-[tool.bandit.assert_used]
-skips = ["*_test.py", "test_*.py"]

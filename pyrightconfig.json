@@ -1,0 +1,21 @@
+{
+  "extraPaths": [
+    "libs"
+  ],
+  "include": [
+    ".",
+    "libs",
+    "apps"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/.*",
+    "venv",
+    "**/node_modules"
+  ],
+  "reportMissingImports": "warning",
+  "reportArgumentType": "none",
+  "reportOptionalMemberAccess": "warning",
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic"
+}
