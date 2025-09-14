@@ -115,7 +115,7 @@ class SolverEngine:
         pattern_counts: defaultdict[str, int] = defaultdict(int)
 
         # Simulate feedback for each possible answer
-        for answer in possible_answers.tolist():
+        for answer in possible_answers:
             answer: str = str(answer)
             pattern: str = self._simulate_feedback(guess_word, answer)
             pattern_counts[pattern] += 1
