@@ -5,7 +5,6 @@ import os
 import time
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List
 
 import numpy as np
 
@@ -33,7 +32,7 @@ class SolverEngine:
         self._all_guesses = np.array(self.lexicon.allowed_guesses)
         self._all_answers = np.array(self.lexicon.answers)
 
-    def find_best_guess(self, possible_answers: List[str], turn: int = 1) -> str:
+    def find_best_guess(self, possible_answers: list[str], turn: int = 1) -> str:
         """Find the best guess using entropy maximization.
 
         Args:
@@ -171,7 +170,7 @@ class SolverEngine:
         return "".join(feedback)
 
     def calculate_detailed_entropy(
-        self, guess_word: str, possible_answers: List[str]
+        self, guess_word: str, possible_answers: list[str]
     ) -> EntropyCalculation:
         """Calculate detailed entropy information for a specific word.
 

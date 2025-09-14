@@ -1,7 +1,6 @@
 """Domain models for the Wordle bot."""
 
 from enum import Enum
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -26,7 +25,7 @@ class GuessResult(BaseModel):
     """Result of a single guess."""
 
     guess: str = Field(..., min_length=5, max_length=5)
-    feedback: List[FeedbackType] = Field(..., min_length=5, max_length=5)
+    feedback: list[FeedbackType] = Field(..., min_length=5, max_length=5)
     is_correct: bool = False
 
     @classmethod
@@ -66,8 +65,8 @@ class GameState(BaseModel):
     """Current state of the Wordle game."""
 
     turn: int = Field(default=1, ge=1, le=6)
-    guesses: List[GuessResult] = Field(default_factory=list)
-    possible_answers: List[str] = Field(default_factory=list)
+    guesses: list[GuessResult] = Field(default_factory=list)
+    possible_answers: list[str] = Field(default_factory=list)
     is_solved: bool = False
     is_failed: bool = False
 
@@ -81,7 +80,7 @@ class GameState(BaseModel):
         elif self.turn > 6:
             self.is_failed = True
 
-    def get_last_guess(self) -> Optional[GuessResult]:
+    def get_last_guess(self) -> GuessResult | None:
         """Get the most recent guess."""
         return self.guesses[-1] if self.guesses else None
 
@@ -102,4 +101,4 @@ class EntropyCalculation(BaseModel):
     word: str = Field(..., min_length=5, max_length=5)
     entropy: float = Field(..., ge=0.0)
     pattern_count: int = Field(..., ge=1)
-    calculation_time: Optional[float] = None
+    calculation_time: float | None = None

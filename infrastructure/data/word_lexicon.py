@@ -1,7 +1,6 @@
 """Word Lexicon module for loading and managing Wordle word lists."""
 
 from pathlib import Path
-from typing import List, Set
 
 
 class WordLexicon:
@@ -17,10 +16,10 @@ class WordLexicon:
 
     def __init__(self):
         if not self._initialized:
-            self._answers: List[str] = []
-            self._allowed_guesses: List[str] = []
-            self._answer_set: Set[str] = set()
-            self._allowed_set: Set[str] = set()
+            self._answers: list[str] = []
+            self._allowed_guesses: list[str] = []
+            self._answer_set: set[str] = set()
+            self._allowed_set: set[str] = set()
             self._load_word_lists()
             WordLexicon._initialized = True
 
@@ -33,7 +32,7 @@ class WordLexicon:
         if not answers_path.exists():
             raise FileNotFoundError(f"Answers file not found: {answers_path}")
 
-        with open(answers_path, "r", encoding="utf-8") as f:
+        with open(answers_path, encoding="utf-8") as f:
             self._answers = [
                 line.strip().upper()
                 for line in f
@@ -47,7 +46,7 @@ class WordLexicon:
         if not allowed_path.exists():
             raise FileNotFoundError(f"Allowed guesses file not found: {allowed_path}")
 
-        with open(allowed_path, "r", encoding="utf-8") as f:
+        with open(allowed_path, encoding="utf-8") as f:
             self._allowed_guesses = [
                 line.strip().upper()
                 for line in f
@@ -69,12 +68,12 @@ class WordLexicon:
             )
 
     @property
-    def answers(self) -> List[str]:
+    def answers(self) -> list[str]:
         """Get list of possible answer words."""
         return self._answers.copy()
 
     @property
-    def allowed_guesses(self) -> List[str]:
+    def allowed_guesses(self) -> list[str]:
         """Get list of all allowed guess words."""
         return self._allowed_guesses.copy()
 

@@ -1,7 +1,6 @@
 """Application configuration settings."""
 
 import os
-from typing import Optional
 
 
 class Settings:
@@ -18,7 +17,7 @@ class Settings:
     SOLVER_TIME_BUDGET_SECONDS: float = float(
         os.getenv("SOLVER_TIME_BUDGET_SECONDS", "5.0")
     )
-    SOLVER_MAX_WORKERS: Optional[int] = None
+    SOLVER_MAX_WORKERS: int | None = None
     if os.getenv("SOLVER_MAX_WORKERS"):
         SOLVER_MAX_WORKERS = int(os.getenv("SOLVER_MAX_WORKERS"))
 

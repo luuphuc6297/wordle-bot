@@ -4,7 +4,7 @@ import random
 import statistics
 import time
 from collections import defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from core.domain.models import GuessResult
 from core.use_cases.game_state_manager import GameStateManager
@@ -33,9 +33,9 @@ class BenchmarkEngine:
     def run_benchmark(
         self,
         num_games: int = 100,
-        target_words: Optional[List[str]] = None,
+        target_words: list[str] | None = None,
         show_progress: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Run comprehensive benchmark across multiple games.
 
         Args:
@@ -83,7 +83,7 @@ class BenchmarkEngine:
 
             except Exception as e:
                 self.logger.error(
-                    f"Error in game {i+1} with target '{target_word}': {e}"
+                    f"Error in game {i + 1} with target '{target_word}': {e}"
                 )
                 continue
 
@@ -95,7 +95,7 @@ class BenchmarkEngine:
 
         return benchmark_results
 
-    def _play_single_game(self, target_word: str) -> Dict[str, Any]:
+    def _play_single_game(self, target_word: str) -> dict[str, Any]:
         """Play a single game simulation.
 
         Args:
@@ -167,8 +167,8 @@ class BenchmarkEngine:
         }
 
     def _compile_results(
-        self, results: List[Dict[str, Any]], target_words: List[str]
-    ) -> Dict[str, Any]:
+        self, results: list[dict[str, Any]], target_words: list[str]
+    ) -> dict[str, Any]:
         """Compile benchmark results into summary statistics.
 
         Args:
@@ -215,12 +215,10 @@ class BenchmarkEngine:
         avg_entropy = statistics.mean(all_entropies) if all_entropies else 0
 
         # Hardest words (most guesses among wins)
-        hardest_wins = sorted(
-            [r for r in wins], key=lambda x: x["guesses_used"], reverse=True
-        )[:5]
+        hardest_wins = sorted(wins, key=lambda x: x["guesses_used"], reverse=True)[:5]
 
         # Easiest words (fewest guesses among wins)
-        easiest_wins = sorted([r for r in wins], key=lambda x: x["guesses_used"])[:5]
+        easiest_wins = sorted(wins, key=lambda x: x["guesses_used"])[:5]
 
         return {
             "games_played": len(results),
@@ -244,7 +242,7 @@ class BenchmarkEngine:
             "target_words": target_words,
         }
 
-    def run_quick_test(self, num_games: int = 20) -> Dict[str, Any]:
+    def run_quick_test(self, num_games: int = 20) -> dict[str, Any]:
         """Run a quick benchmark for rapid testing.
 
         Args:
@@ -256,7 +254,7 @@ class BenchmarkEngine:
         print(f"\n🚀 Running quick test with {num_games} games...")
         return self.run_benchmark(num_games, show_progress=True)
 
-    def run_stress_test(self, difficult_words: List[str] = None) -> Dict[str, Any]:
+    def run_stress_test(self, difficult_words: list[str] = None) -> dict[str, Any]:
         """Run stress test with known difficult words.
 
         Args:
@@ -296,7 +294,7 @@ class BenchmarkEngine:
             len(difficult_words), target_words=difficult_words, show_progress=True
         )
 
-    def analyze_algorithm_performance(self, results: Dict[str, Any]) -> Dict[str, Any]:
+    def analyze_algorithm_performance(self, results: dict[str, Any]) -> dict[str, Any]:
         """Analyze algorithm performance from benchmark results.
 
         Args:

@@ -2,7 +2,7 @@
 
 import time
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from core.domain.models import FeedbackType, GuessResult
 
@@ -180,8 +180,7 @@ class GameDisplay:
             return
 
         print(
-            f"  📈 {word}: {entropy:.3f} bits | {patterns} patterns | "
-            f"{remaining} remaining"
+            f"  📈 {word}: {entropy:.3f} bits | {patterns} patterns | {remaining} remaining"
         )
 
 
@@ -225,7 +224,7 @@ class BenchmarkDisplay:
             end="",
         )
 
-    def show_final_results(self, results: Dict[str, Any]):
+    def show_final_results(self, results: dict[str, Any]):
         """Display final benchmark results.
 
         Args:
@@ -241,7 +240,7 @@ class BenchmarkDisplay:
         print(f"🏆 Win Rate: {results['win_rate']:.1f}%")
         print(f"📈 Average Guesses (for wins): {results['avg_guesses']:.2f}")
         print(f"⏱️  Total Time: {total_time:.1f}s")
-        print(f"⚡ Avg Time per Game: {total_time/results['games_played']:.2f}s")
+        print(f"⚡ Avg Time per Game: {total_time / results['games_played']:.2f}s")
 
         print("\n📊 Distribution:")
         for guess_count, count in results["distribution"].items():

@@ -3,7 +3,7 @@
 import statistics
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import numpy as np
 
@@ -20,7 +20,7 @@ class WordDifficulty:
     word: str
     avg_guesses: float
     success_rate: float
-    entropy_profile: List[float]
+    entropy_profile: list[float]
     difficulty_score: float
 
 
@@ -29,9 +29,9 @@ class PositionAnalysis:
     """Letter position frequency analysis."""
 
     position: int
-    letter_frequencies: Dict[str, float]
+    letter_frequencies: dict[str, float]
     entropy_contribution: float
-    common_patterns: List[str]
+    common_patterns: list[str]
 
 
 class AnalyticsEngine:
@@ -43,8 +43,8 @@ class AnalyticsEngine:
         self.logger = get_logger(__name__)
 
     def analyze_word_difficulty(
-        self, words: List[str] = None, sample_size: int = 50
-    ) -> List[WordDifficulty]:
+        self, words: list[str] = None, sample_size: int = 50
+    ) -> list[WordDifficulty]:
         """Analyze difficulty of words based on solving performance.
 
         Args:
@@ -101,7 +101,7 @@ class AnalyticsEngine:
         # Sort by difficulty (hardest first)
         return sorted(difficulties, key=lambda x: x.difficulty_score, reverse=True)
 
-    def analyze_position_patterns(self) -> List[PositionAnalysis]:
+    def analyze_position_patterns(self) -> list[PositionAnalysis]:
         """Analyze letter frequency and patterns by position.
 
         Returns:
@@ -148,7 +148,7 @@ class AnalyticsEngine:
 
     def find_optimal_guess_combinations(
         self, n_guesses: int = 2
-    ) -> List[Tuple[str, ...]]:
+    ) -> list[tuple[str, ...]]:
         """Find optimal combinations of first N guesses.
 
         Args:
@@ -176,7 +176,7 @@ class AnalyticsEngine:
         combinations.sort(key=lambda x: x[1], reverse=True)
         return [combo[0] for combo in combinations[:10]]
 
-    def analyze_feedback_patterns(self) -> Dict[str, Any]:
+    def analyze_feedback_patterns(self) -> dict[str, Any]:
         """Analyze frequency and effectiveness of feedback patterns.
 
         Returns:
@@ -191,7 +191,7 @@ class AnalyticsEngine:
         for word in sample_words:
             game_result = self._simulate_single_game(word)
 
-            for i, guess_info in enumerate(game_result["guesses"]):
+            for _i, guess_info in enumerate(game_result["guesses"]):
                 pattern = guess_info["pattern"]
                 pattern_stats[pattern] += 1
 
@@ -227,7 +227,7 @@ class AnalyticsEngine:
             "pattern_details": pattern_analysis,
         }
 
-    def generate_strategy_insights(self) -> Dict[str, Any]:
+    def generate_strategy_insights(self) -> dict[str, Any]:
         """Generate high-level strategy insights and recommendations.
 
         Returns:
@@ -264,7 +264,7 @@ class AnalyticsEngine:
 
         return insights
 
-    def _simulate_single_game(self, target_word: str) -> Dict[str, Any]:
+    def _simulate_single_game(self, target_word: str) -> dict[str, Any]:
         """Simulate a single game for analysis."""
         solver = SolverEngine(time_budget_seconds=0.5)  # Fast for analysis
         game_manager = GameStateManager()
@@ -320,8 +320,8 @@ class AnalyticsEngine:
         }
 
     def _average_entropy_profile(
-        self, entropy_profiles: List[List[float]]
-    ) -> List[float]:
+        self, entropy_profiles: list[list[float]]
+    ) -> list[float]:
         """Average entropy profiles across multiple games."""
         if not entropy_profiles:
             return []
@@ -336,7 +336,7 @@ class AnalyticsEngine:
 
         return averaged
 
-    def _get_high_entropy_words(self, n: int = 20) -> List[str]:
+    def _get_high_entropy_words(self, n: int = 20) -> list[str]:
         """Get top N words by entropy against full answer set."""
         word_entropies = []
 
@@ -346,7 +346,7 @@ class AnalyticsEngine:
                     word, self.lexicon.answers
                 )
                 word_entropies.append((word, entropy_calc.entropy))
-            except:
+            except Exception:
                 continue
 
         word_entropies.sort(key=lambda x: x[1], reverse=True)
@@ -369,14 +369,14 @@ class AnalyticsEngine:
                 * 0.7
             )
             return (first_entropy + second_entropy) / 2
-        except:
+        except Exception:
             return 0.0
 
     def _generate_recommendations(
         self,
-        position_analysis: List[PositionAnalysis],
-        feedback_analysis: Dict[str, Any],
-    ) -> List[str]:
+        position_analysis: list[PositionAnalysis],
+        feedback_analysis: dict[str, Any],
+    ) -> list[str]:
         """Generate strategic recommendations based on analysis."""
         recommendations = []
 

@@ -3,27 +3,19 @@
 # Format code script for Wordle Bot
 # Run this before committing to ensure proper formatting
 
-echo "🎨 Formatting Python code..."
+echo "🎨 Formatting Python code with Ruff..."
 
-# Format with black
-echo "Running black..."
-black .
-
-# Sort imports with isort
-echo "Running isort..."
-isort . --profile black
-
-# Remove unused imports and fix basic issues
-echo "Running autoflake..."
-pip install autoflake > /dev/null 2>&1
-autoflake --remove-all-unused-imports --remove-unused-variables --remove-duplicate-keys --expand-star-imports --in-place --recursive . --exclude=venv,__pycache__,.pytest_cache
+# Format and fix with ruff
+echo "Running ruff format and fix..."
+ruff format .
+ruff check --fix .
 
 echo "✅ Code formatting complete!"
 
-# Optional: run flake8 to show remaining issues
+# Check for remaining issues
 echo ""
-echo "📋 Running flake8 to check for issues..."
-flake8 . || echo "Some issues found - but main formatting is done!"
+echo "📋 Running ruff check to show remaining issues..."
+ruff check . || echo "Some issues found - but main formatting is done!"
 
 echo ""
 echo "🚀 Ready to commit!"

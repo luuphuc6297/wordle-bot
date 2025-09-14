@@ -3,7 +3,6 @@
 import argparse
 import json
 import sys
-from typing import Optional
 
 from config.settings import settings
 from core.use_cases.analytics_engine import AnalyticsEngine
@@ -86,7 +85,7 @@ def parse_arguments() -> argparse.Namespace:
         epilog="""
 Examples:
   python main.py solve                    # Solve today's daily puzzle
-  python main.py simulate CRANE          # Simulate solving with CRANE as target  
+  python main.py simulate CRANE          # Simulate solving with CRANE as target
   python main.py analyze SALET           # Analyze entropy of SALET as first guess
   python main.py benchmark --games 50    # Run benchmark with 50 games
   python main.py benchmark --quick       # Quick benchmark (20 games)
@@ -220,7 +219,7 @@ def simulate_game(orchestrator: Orchestrator, target_answer: str) -> dict:
 
 
 def analyze_guess(
-    orchestrator: Orchestrator, word: str, answers_file: Optional[str] = None
+    orchestrator: Orchestrator, word: str, answers_file: str | None = None
 ) -> dict:
     """Analyze the entropy of a specific guess.
 
@@ -238,7 +237,7 @@ def analyze_guess(
     possible_answers = None
     if answers_file:
         try:
-            with open(answers_file, "r") as f:
+            with open(answers_file) as f:
                 possible_answers = [line.strip().upper() for line in f if line.strip()]
             logger.info(
                 f"Loaded {len(possible_answers)} possible answers from {answers_file}"
@@ -364,18 +363,18 @@ def output_results(results: dict, output_format: str) -> None:
             # Game solution results
             game_result = results["game_result"]
             if game_result["solved"]:
-                print(f"✅ PUZZLE SOLVED!")
+                print("✅ PUZZLE SOLVED!")
                 print(f"Answer: {game_result['final_answer']}")
                 print(f"Turns: {game_result['total_turns']}")
             else:
                 print(f"❌ Puzzle failed after {game_result['total_turns']} turns")
 
-            print(f"\nPerformance:")
+            print("\nPerformance:")
             perf = results["performance_metrics"]
             print(f"  Total time: {perf['total_game_time_seconds']:.2f}s")
             print(f"  Avg per turn: {perf['average_time_per_turn']:.2f}s")
 
-            print(f"\nGuess history:")
+            print("\nGuess history:")
             for i, guess in enumerate(results["guess_history"], 1):
                 status = "✅" if guess["is_correct"] else "⭕"
                 print(f"  {i}. {guess['guess']} -> {guess['pattern']} {status}")
@@ -438,7 +437,7 @@ def output_results(results: dict, output_format: str) -> None:
 
             elif analysis_type == "strategy_insights":
                 insights = data
-                print(f"\n🎯 Position Insights:")
+                print("\n🎯 Position Insights:")
                 print(
                     f"  Most informative: Position {insights['position_insights']['most_informative_position']}"
                 )
@@ -446,7 +445,7 @@ def output_results(results: dict, output_format: str) -> None:
                     f"  Least informative: Position {insights['position_insights']['least_informative_position']}"
                 )
 
-                print(f"\n📈 Pattern Insights:")
+                print("\n📈 Pattern Insights:")
                 print(
                     f"  Most effective: {insights['pattern_insights']['most_effective_pattern']}"
                 )
@@ -455,7 +454,7 @@ def output_results(results: dict, output_format: str) -> None:
                 )
 
                 if insights["recommendations"]:
-                    print(f"\n💡 Strategic Recommendations:")
+                    print("\n💡 Strategic Recommendations:")
                     for rec in insights["recommendations"]:
                         print(f"  • {rec}")
 

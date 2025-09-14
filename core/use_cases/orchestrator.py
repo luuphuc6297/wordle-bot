@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from core.use_cases.game_state_manager import GameStateManager
 from core.use_cases.solver_engine import SolverEngine
@@ -35,7 +35,7 @@ class Orchestrator:
         self.lexicon = WordLexicon()
         self.game_client = GameClient(base_url=api_base_url)
         self.solver_engine = SolverEngine(time_budget_seconds=solver_time_budget)
-        self.game_state_manager: Optional[GameStateManager] = None
+        self.game_state_manager: GameStateManager | None = None
 
         # Initialize display
         self.show_rich_display = show_rich_display
@@ -47,7 +47,7 @@ class Orchestrator:
             f"Orchestrator initialized with {len(self.lexicon.answers)} possible answers"
         )
 
-    def solve_daily_puzzle(self) -> Dict[str, Any]:
+    def solve_daily_puzzle(self) -> dict[str, Any]:
         """Solve the daily Wordle puzzle.
 
         Returns:
@@ -125,7 +125,7 @@ class Orchestrator:
             self.logger.error(f"Failed to initialize game: {e}")
             raise
 
-    def _generate_final_summary(self, total_time: float) -> Dict[str, Any]:
+    def _generate_final_summary(self, total_time: float) -> dict[str, Any]:
         """Generate final game summary.
 
         Args:
@@ -175,8 +175,8 @@ class Orchestrator:
         return final_summary
 
     def analyze_guess(
-        self, guess: str, possible_answers: Optional[list] = None
-    ) -> Dict[str, Any]:
+        self, guess: str, possible_answers: list | None = None
+    ) -> dict[str, Any]:
         """Analyze the entropy and effectiveness of a specific guess.
 
         Args:
@@ -208,7 +208,7 @@ class Orchestrator:
             == self.solver_engine.OPTIMAL_FIRST_GUESS,
         }
 
-    def simulate_game(self, target_answer: str, game_id: str = None) -> Dict[str, Any]:
+    def simulate_game(self, target_answer: str, game_id: str = None) -> dict[str, Any]:
         """Simulate a game with a known target answer for testing.
 
         Args:

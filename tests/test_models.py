@@ -115,7 +115,7 @@ class TestGameState:
         state = GameState()
 
         # Add 6 incorrect guesses
-        for i in range(6):
+        for _i in range(6):
             guess = GuessResult.from_api_response("WRONG", "-----")
             state.add_guess(guess)
 
@@ -260,9 +260,9 @@ class TestEntropyCalculation:
         assert calc.entropy >= 0
 
         # Invalid word length should be caught by Field validation
-        with pytest.raises(Exception):  # Pydantic validation error
+        with pytest.raises(ValueError):  # Pydantic validation error
             EntropyCalculation(word="HI", entropy=1.0, pattern_count=1)
 
         # Negative entropy should be caught
-        with pytest.raises(Exception):  # Pydantic validation error
+        with pytest.raises(ValueError):  # Pydantic validation error
             EntropyCalculation(word="CRANE", entropy=-1.0, pattern_count=1)

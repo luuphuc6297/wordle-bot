@@ -1,6 +1,6 @@
 """GameClient - API adapter for Wordle game communication."""
 
-from typing import Any, Dict
+from typing import Any
 
 import requests
 from tenacity import (
@@ -42,7 +42,7 @@ class GameClient:
         wait=wait_exponential(multiplier=1, min=4, max=10),
         retry=retry_if_exception_type((requests.RequestException, WordleAPIError)),
     )
-    def start_game(self) -> Dict[str, Any]:
+    def start_game(self) -> dict[str, Any]:
         """Start a new Wordle game.
 
         Returns:
@@ -99,7 +99,7 @@ class GameClient:
             # Expected format: {"result": "++x--", ...}
             if "result" not in data:
                 raise WordleAPIError(
-                    f"Invalid API response format: missing 'result' field"
+                    "Invalid API response format: missing 'result' field"
                 )
 
             result_string = data["result"]
@@ -150,7 +150,7 @@ class GameClient:
         except ValueError as e:
             raise WordleAPIError(f"Invalid JSON response: {str(e)}") from e
 
-    def get_game_status(self) -> Dict[str, Any]:
+    def get_game_status(self) -> dict[str, Any]:
         """Get current game status.
 
         Returns:

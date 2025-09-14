@@ -1,7 +1,5 @@
 """GameStateManager - Manages game state and filters possible answers based on feedback."""
 
-from typing import List
-
 from core.domain.models import FeedbackType, GameState, GuessResult
 from core.use_cases.solver_engine import SolverEngine
 from infrastructure.data.word_lexicon import WordLexicon
@@ -10,7 +8,7 @@ from infrastructure.data.word_lexicon import WordLexicon
 class GameStateManager:
     """Manages the current game state and filters possible answers."""
 
-    def __init__(self, initial_answers: List[str] = None):
+    def __init__(self, initial_answers: list[str] = None):
         """Initialize game state manager.
 
         Args:
@@ -63,7 +61,7 @@ class GameStateManager:
         self.game_state.possible_answers = filtered_answers
 
     def _is_answer_consistent(
-        self, guess: str, feedback: List[FeedbackType], answer: str
+        self, guess: str, feedback: list[FeedbackType], answer: str
     ) -> bool:
         """Check if an answer is consistent with the given guess and feedback.
 
@@ -98,7 +96,7 @@ class GameStateManager:
         """
         return self.game_state
 
-    def get_possible_answers(self) -> List[str]:
+    def get_possible_answers(self) -> list[str]:
         """Get the current list of possible answers.
 
         Returns:
