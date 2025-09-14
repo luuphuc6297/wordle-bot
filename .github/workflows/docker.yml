@@ -17,21 +17,17 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Build CLI Docker image
+    - name: Build Docker image
       run: |
-        docker build -f Dockerfile.cli -t wordle-bot-cli:latest .
-
-    - name: Build API Docker image
-      run: |
-        docker build -f Dockerfile.api -t wordle-bot-api:latest .
+        docker build -t wordle-bot:latest .
 
     - name: Test CLI Docker image
       run: |
-        docker run --rm wordle-bot-cli:latest --help
+        docker run --rm wordle-bot:latest python -m apps.cli.main --help
 
     - name: Test API Docker image
       run: |
-        docker run --rm -d -p 8000:8000 --name wordle-api wordle-bot-api:latest
+        docker run --rm -d -p 8000:8000 --name wordle-api wordle-bot:latest uvicorn apps.api.app:app --host 0.0.0.0 --port 8000
         sleep 10
         curl -f http://localhost:8000/health || exit 1
         docker stop wordle-api

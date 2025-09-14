@@ -1,59 +1,22 @@
 version: '3.8'
 
 services:
-  # Production service
-  wordle-bot:
-    build:
-      context: .
-      target: production
-    environment:
-      - LOG_LEVEL=INFO
-      - LOG_JSON_FORMAT=true
-      - SOLVER_TIME_BUDGET_SECONDS=5.0
-      - WORDLE_API_BASE_URL=https://wordle.votee.dev:8000
+  cli:
+    build: .
+    command: ["python", "-m", "apps.cli.main", "benchmark", "--quick"]
     volumes:
-      - ./logs:/app/logs:rw
-    restart: unless-stopped
-    command: ["solve", "--output-format", "json"]
+      - ./libs:/app/libs
+      - ./apps:/app/apps
+    environment:
+      - PYTHONPATH=/app/libs
 
-  # Development service
-  wordle-bot-dev:
-    build:
-      context: .
-      target: development
-    environment:
-      - DEBUG=true
-      - LOG_LEVEL=DEBUG
-      - SOLVER_TIME_BUDGET_SECONDS=10.0
+  api:
+    build: .
+    command: ["uvicorn", "apps.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
     volumes:
-      - .:/app:rw
-    working_dir: /app
-    stdin_open: true
-    tty: true
-    profiles: ["dev"]
-
-  # Testing service
-  wordle-bot-test:
-    build:
-      context: .
-      target: development
+      - ./libs:/app/libs
+      - ./apps:/app/apps
     environment:
-      - PYTHONPATH=/app
-    volumes:
-      - .:/app:rw
-    working_dir: /app
-    command: ["python", "-m", "pytest", "tests/", "-v", "--tb=short"]
-    profiles: ["test"]
-
-  # Simulation service for bulk testing
-  wordle-bot-simulate:
-    build:
-      context: .
-      target: production
-    environment:
-      - LOG_LEVEL=INFO
-      - SOLVER_TIME_BUDGET_SECONDS=3.0
-    volumes:
-      - ./simulation_results:/app/results:rw
-    profiles: ["simulate"]
-    # Command will be overridden when running simulations
+      - PYTHONPATH=/app/libs

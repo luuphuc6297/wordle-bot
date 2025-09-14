@@ -32,12 +32,17 @@ cli: ## Run CLI app
 api: ## Run API app
 	PYTHONPATH=libs uv run uvicorn apps.api.app:app --host 0.0.0.0 --port 8000 --reload
 
-docker-build: ## Build Docker images
-	docker build -f Dockerfile.cli -t wordle-bot-cli:latest .
-	docker build -f Dockerfile.api -t wordle-bot-api:latest .
+docker-build: ## Build Docker image
+	docker build -t wordle-bot:latest .
 
 docker-run: ## Run with Docker Compose
-	docker-compose -f docker-compose.dev.yml up --build
+	docker-compose up --build
+
+docker-cli: ## Run CLI in Docker
+	docker run --rm wordle-bot:latest python -m apps.cli.main --help
+
+docker-api: ## Run API in Docker
+	docker run --rm -p 8000:8000 wordle-bot:latest uvicorn apps.api.app:app --host 0.0.0.0 --port 8000
 
 clean: ## Clean up temporary files
 	find . -type f -name "*.pyc" -delete
