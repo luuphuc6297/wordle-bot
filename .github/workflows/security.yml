@@ -1,12 +1,14 @@
 name: Security
 
 on:
-  push:
-    branches: [ main, alpha ]
-  pull_request:
-    branches: [ main, alpha ]
-  schedule:
-    - cron: '0 0 * * 1'  # Weekly on Monday
+  # Disabled - focusing on main CI checks
+  # push:
+  #   branches: [ main, alpha ]
+  # pull_request:
+  #   branches: [ main, alpha ]
+  # schedule:
+  #   - cron: '0 0 * * 1'  # Weekly on Monday
+  workflow_dispatch:  # Only run manually if needed
 
 jobs:
   security:

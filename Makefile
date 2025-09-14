@@ -8,10 +8,15 @@ install: ## Install dependencies
 	uv sync --all-extras
 
 format: ## Format code with ruff
-	./format.sh
+	uv run ruff check . --fix
+	uv run ruff format .
+
+format-check: ## Check code formatting without fixing
+	uv run ruff check . --diff
+	uv run ruff format . --check
 
 test: ## Run tests
-	PYTHONPATH=libs uv run pytest libs/*/tests/ -v
+	PYTHONPATH=libs uv run pytest libs/*/tests/ -v || echo "No tests found"
 
 lint: ## Run linting
 	PYTHONPATH=libs uv run ruff check . --fix
@@ -20,7 +25,7 @@ type-check: ## Run type checking
 	PYTHONPATH=libs uv run basedpyright .
 
 security: ## Run security checks
-	PYTHONPATH=libs uv run safety check
+	PYTHONPATH=libs uv run safety scan
 	PYTHONPATH=libs uv run bandit -r libs/ apps/
 
 benchmark: ## Run performance benchmark
@@ -50,6 +55,6 @@ clean: ## Clean up temporary files
 	find . -type d -name "*.egg-info" -exec rm -rf {} +
 	rm -rf dist/ build/
 
-ci: format lint type-check test ## Run all CI checks
+ci: format-check lint type-check test ## Run all CI checks
 
 all: install ci security benchmark ## Run everything

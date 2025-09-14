@@ -1,4 +1,14 @@
-# Root workspace configuration - no package to build
+# Root workspace configuration
+[project]
+name = "wordle-bot"
+version = "1.0.0"
+description = "Autonomous Wordle-solving bot using entropy maximization"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.hatch.build.targets.wheel]
+packages = ["libs"]
 
 [tool.uv.workspace]
 members = [
@@ -14,10 +24,12 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "bandit>=1.8.6",
     "basedpyright>=1.31.4",
     "pre-commit>=4.3.0",
     "pytest>=8.4.2",
     "ruff>=0.13.0",
+    "safety>=3.6.1",
 ]
 
 [tool.black]

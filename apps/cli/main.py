@@ -173,6 +173,9 @@ def benchmark(
   stress: bool = typer.Option(
     False, "--stress", help="Run stress test with difficult words"
   ),
+  output_format: str = typer.Option(
+    "text", "--output-format", "-f", help="Output format (json/text)"
+  ),
   output_file: str | None = typer.Option(
     None, "--output", "-o", help="Output file for results"
   ),
@@ -204,7 +207,7 @@ def benchmark(
     if output_file:
       save_results_to_file(result, output_file)
     else:
-      output_results(result, "text")
+      output_results(result, output_format)
 
   except Exception as e:
     logger.error(f"Error in benchmark: {e}")
