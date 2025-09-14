@@ -49,6 +49,7 @@ docker-cli: ## Run CLI in Docker
 docker-api: ## Run API in Docker
 	docker run --rm -p 8000:8000 wordle-bot:latest uvicorn apps.api.app:app --host 0.0.0.0 --port 8000
 
+
 clean: ## Clean up temporary files
 	find . -type f -name "*.pyc" -delete
 	find . -type d -name "__pycache__" -delete
