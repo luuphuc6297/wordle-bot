@@ -32,6 +32,10 @@ jobs:
       run: |
         uv sync --all-extras
 
+    - name: Run tests
+      run: |
+        PYTHONPATH=libs uv run pytest libs/*/tests/ -v
+
     - name: Build CLI package
       run: |
         cd apps/cli

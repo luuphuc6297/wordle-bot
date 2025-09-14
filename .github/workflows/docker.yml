@@ -21,6 +21,10 @@ jobs:
       run: |
         docker build -t wordle-bot:latest .
 
+    - name: Run tests in Docker
+      run: |
+        docker run --rm wordle-bot:latest python -m pytest libs/*/tests/ -v
+
     - name: Test CLI Docker image
       run: |
         docker run --rm wordle-bot:latest python -m apps.cli.main --help
