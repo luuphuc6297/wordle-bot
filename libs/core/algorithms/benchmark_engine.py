@@ -292,9 +292,7 @@ class BenchmarkEngine:
                 w for w in difficult_words if self.lexicon.is_valid_answer(w)
             ]
 
-        print(
-            f"\n💪 Running stress test with {len(difficult_words)} difficult words..."
-        )
+        print(f"\n💪 Running stress test with {len(difficult_words)} difficult words...")
         return self.run_benchmark(
             len(difficult_words), target_words=difficult_words, show_progress=True
         )
