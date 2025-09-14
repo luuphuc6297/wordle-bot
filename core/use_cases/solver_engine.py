@@ -62,7 +62,7 @@ class SolverEngine:
         best_word: str = possible_answers[0]  # Fallback
         best_entropy: float = 0.0
 
-        start_time = time.time()
+        start_time: float = time.time()
 
         # Use threading for parallelization (NumPy releases GIL)
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
@@ -87,8 +87,8 @@ class SolverEngine:
                     word: str = futures[future]  # type: ignore
 
                     if entropy > best_entropy:
-                        best_entropy: float = entropy
-                        best_word: str = word
+                        best_entropy = entropy
+                        best_word = word
 
                 except Exception:
                     # Skip failed calculations

@@ -8,6 +8,7 @@ from typing import TypedDict
 
 import numpy as np
 
+from core.domain.models import EntropyCalculation
 from core.use_cases.game_state_manager import GameStateManager
 from core.use_cases.solver_engine import SolverEngine
 from infrastructure.data.word_lexicon import WordLexicon
@@ -162,7 +163,7 @@ class AnalyticsEngine:
 
         for pos in range(5):
             letter_counts: dict[str, int] = defaultdict(int)
-            total_words = len(self.lexicon.answers)
+            total_words: int = len(self.lexicon.answers)
 
             # Count letter frequencies at each position
             for word in self.lexicon.answers:
@@ -237,13 +238,13 @@ class AnalyticsEngine:
         pattern_effectiveness: dict[str, list[float]] = defaultdict(list)
 
         # Sample games to analyze patterns
-        sample_words = self.lexicon.answers[:100]  # First 100 for speed
+        sample_words: list[str] = self.lexicon.answers[:100]  # First 100 for speed
 
         for word in sample_words:
-            game_result = self._simulate_single_game(word)
+            game_result: GameResult = self._simulate_single_game(word)
 
             for _i, guess_info in enumerate(game_result["guesses"]):
-                pattern = guess_info["pattern"]
+                pattern: str = guess_info["pattern"]
                 pattern_stats[pattern] += 1
 
                 # Effectiveness = reduction in possibilities
@@ -285,8 +286,8 @@ class AnalyticsEngine:
             Strategic insights for bot improvement
         """
         # Analyze current performance
-        position_analysis = self.analyze_position_patterns()
-        feedback_analysis = self.analyze_feedback_patterns()
+        position_analysis: list[PositionAnalysis] = self.analyze_position_patterns()
+        feedback_analysis: FeedbackAnalysis = self.analyze_feedback_patterns()
 
         # Generate insights
         insights: StrategyInsights = {
@@ -317,21 +318,24 @@ class AnalyticsEngine:
 
     def _simulate_single_game(self, target_word: str) -> GameResult:
         """Simulate a single game for analysis."""
-        solver = SolverEngine(time_budget_seconds=0.5)  # Fast for analysis
-        game_manager = GameStateManager()
+        solver: SolverEngine = SolverEngine(
+            time_budget_seconds=0.5
+        )  # Fast for analysis
+        game_manager: GameStateManager = GameStateManager()
 
         turn = 1
         guesses: list[GuessInfo] = []
 
         while not game_manager.is_game_over() and turn <= 6:
-            current_answers = game_manager.get_possible_answers()
+            current_answers: list[str] = game_manager.get_possible_answers()
 
             # Get best guess
             best_guess = solver.find_best_guess(current_answers, turn)
 
             # Calculate entropy
+            entropy: float
             if len(current_answers) > 1:
-                entropy_calc = solver.calculate_detailed_entropy(
+                entropy_calc: EntropyCalculation = solver.calculate_detailed_entropy(
                     best_guess, current_answers
                 )
                 entropy = entropy_calc.entropy
