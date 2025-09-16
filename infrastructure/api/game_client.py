@@ -10,6 +10,8 @@ from tenacity import (
     wait_exponential,
 )
 
+from config.settings import Settings
+from config.settings import settings as default_settings
 from core.domain.models import GuessResult
 
 
@@ -21,15 +23,22 @@ class GameClient:
     """API client for communicating with the Wordle game server."""
 
     def __init__(
-        self, base_url: str = "https://wordle.votee.dev:8000", timeout: int = 10
+        self,
+        base_url: str | None = None,
+        timeout: int | None = None,
+        app_settings: Settings | None = None,
     ):
         """Initialize the game client.
         Args:
             base_url: Base URL for the Wordle API
             timeout: Request timeout in seconds
         """
-        self.base_url = base_url.rstrip("/")
-        self.timeout = timeout
+        settings = app_settings or default_settings
+        effective_base = base_url or settings.WORDLE_API_BASE_URL
+        effective_timeout = timeout or settings.API_TIMEOUT_SECONDS
+
+        self.base_url = effective_base.rstrip("/")
+        self.timeout = effective_timeout
         self.session = requests.Session()
 
         # Set common headers
@@ -39,31 +48,21 @@ class GameClient:
 
     @retry(
         stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
+        wait=wait_exponential(multiplier=1, min=1, max=5),
         retry=retry_if_exception_type((requests.RequestException, WordleAPIError)),
     )
     def start_game(self) -> dict[str, Any]:
-        """Start a new Wordle game.
-
-        Returns:
-            Game initialization response
-
-        Raises:
-            WordleAPIError: If the API request fails
-        """
+        """Start or fetch the current daily Wordle game status via GET /daily."""
         try:
-            response = self.session.post(f"{self.base_url}/daily", timeout=self.timeout)
-
+            response = self.session.get(f"{self.base_url}/daily", timeout=self.timeout)
             self._validate_response(response)
-
             return response.json()
-
         except requests.RequestException as e:
-            raise WordleAPIError(f"Failed to start game: {str(e)}") from e
+            raise WordleAPIError(f"Failed to start/get game: {str(e)}") from e
 
     @retry(
         stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
+        wait=wait_exponential(multiplier=1, min=1, max=5),
         retry=retry_if_exception_type((requests.RequestException, WordleAPIError)),
     )
     def submit_guess(self, guess: str) -> GuessResult:
@@ -85,10 +84,9 @@ class GameClient:
         guess = guess.upper()
 
         try:
-            payload = {"guess": guess}
-
-            response = self.session.put(
-                f"{self.base_url}/daily", json=payload, timeout=self.timeout
+            # According to API docs, submit guess via GET /daily/{word}
+            response = self.session.get(
+                f"{self.base_url}/daily/{guess}", timeout=self.timeout
             )
 
             self._validate_response(response)

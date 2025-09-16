@@ -2,6 +2,8 @@
 
 from typing import TypedDict
 
+from config.settings import Settings
+from config.settings import settings as default_settings
 from core.domain.models import FeedbackType, GameState, GuessResult
 from core.use_cases.solver_engine import SolverEngine
 from infrastructure.data.word_lexicon import WordLexicon
@@ -23,15 +25,20 @@ class GameSummaryDict(TypedDict):
 class GameStateManager:
     """Manages the current game state and filters possible answers."""
 
-    def __init__(self, initial_answers: list[str] | None = None):
+    def __init__(
+        self,
+        initial_answers: list[str] | None = None,
+        app_settings: Settings | None = None,
+    ):
         """Initialize game state manager.
 
         Args:
             initial_answers: Optional list of initial possible answers.
             If None, uses all possible answers from lexicon.
         """
+        self.settings: Settings = app_settings or default_settings
         self.lexicon: WordLexicon = WordLexicon()
-        self.solver: SolverEngine = SolverEngine()
+        self.solver: SolverEngine = SolverEngine(app_settings=self.settings)
 
         initial_possible_answers = initial_answers or self.lexicon.answers
 
@@ -92,14 +99,12 @@ class GameStateManager:
         simulated_pattern = self.solver.simulate_feedback(guess, answer)
 
         # Convert our feedback to pattern string for comparison
-        expected_pattern = ""
-        for f in feedback:
-            if f == FeedbackType.CORRECT:
-                expected_pattern += "+"
-            elif f == FeedbackType.PRESENT:
-                expected_pattern += "o"
-            else:  # ABSENT
-                expected_pattern += "-"
+        expected_pattern = "".join(
+            "+"
+            if f == FeedbackType.CORRECT
+            else ("o" if f == FeedbackType.PRESENT else "-")
+            for f in feedback
+        )
 
         return simulated_pattern == expected_pattern
 

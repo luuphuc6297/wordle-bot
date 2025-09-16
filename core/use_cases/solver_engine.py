@@ -10,6 +10,7 @@ import numpy as np
 
 from config.settings import Settings
 from config.settings import settings as default_settings
+from core.domain.constants import TIME_BUDGET_BUFFER, WORD_LENGTH
 from core.domain.models import EntropyCalculation
 from infrastructure.data.word_lexicon import WordLexicon
 
@@ -83,9 +84,7 @@ class SolverEngine:
             futures: dict[Future[float], str] = {}
             for guess_word in self._all_guesses.tolist():
                 guess_word: str = str(guess_word)
-                if (
-                    time.time() - start_time > self.time_budget * 0.9
-                ):  # Leave some buffer
+                if time.time() - start_time > self.time_budget * TIME_BUDGET_BUFFER:
                     break
 
                 future: Future[float] = executor.submit(
@@ -94,7 +93,7 @@ class SolverEngine:
                 futures[future] = guess_word
 
             # Collect results as they complete
-            for future in as_completed(futures, timeout=self.time_budget):  # type: ignore
+            for future in as_completed(futures):  # type: ignore
                 try:
                     entropy: float = future.result()  # type: ignore
                     word: str = futures[future]  # type: ignore
@@ -159,11 +158,11 @@ class SolverEngine:
         guess = guess.upper()
         answer = answer.upper()
 
-        if len(guess) != 5 or len(answer) != 5:
+        if len(guess) != WORD_LENGTH or len(answer) != WORD_LENGTH:
             raise ValueError("Words must be exactly 5 letters")
 
         # Initialize feedback array
-        feedback: list[str] = ["-"] * 5
+        feedback: list[str] = ["-"] * WORD_LENGTH
 
         # Count letter frequencies in the answer
         answer_letter_counts: defaultdict[str, int] = defaultdict(int)
@@ -171,13 +170,13 @@ class SolverEngine:
             answer_letter_counts[letter] += 1
 
         # First pass: Mark exact matches (green)
-        for i in range(5):
+        for i in range(WORD_LENGTH):
             if guess[i] == answer[i]:
                 feedback[i] = "+"
                 answer_letter_counts[guess[i]] -= 1
 
         # Second pass: Mark present but wrong position (yellow)
-        for i in range(5):
+        for i in range(WORD_LENGTH):
             if feedback[i] != "+":  # Not already marked as correct
                 letter: str = guess[i]
                 if answer_letter_counts[letter] > 0:

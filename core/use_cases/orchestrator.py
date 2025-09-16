@@ -90,7 +90,9 @@ class Orchestrator:
         # Initialize components
         self.settings: Settings = app_settings or default_settings
         self.lexicon: WordLexicon = WordLexicon()
-        self.game_client: GameClient = GameClient(base_url=api_base_url)
+        self.game_client: GameClient = GameClient(
+            base_url=api_base_url, app_settings=self.settings
+        )
         self.solver_engine: SolverEngine = SolverEngine(
             time_budget_seconds=solver_time_budget,
             app_settings=self.settings,
@@ -180,7 +182,7 @@ class Orchestrator:
             self.logger.info(msg=f"Game started: {start_response}")
 
             # Initialize game state manager with all possible answers
-            self.game_state_manager = GameStateManager()
+            self.game_state_manager = GameStateManager(app_settings=self.settings)
 
             self.logger.info(msg="Game initialization completed")
 

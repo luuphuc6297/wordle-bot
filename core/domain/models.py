@@ -4,6 +4,8 @@ from enum import Enum
 
 from pydantic import BaseModel, Field
 
+from core.domain.constants import MAX_TURNS, WORD_LENGTH
+
 
 class FeedbackType(Enum):
     """Feedback types for each letter position."""
@@ -18,14 +20,16 @@ class LetterFeedback(BaseModel):
 
     letter: str = Field(..., min_length=1, max_length=1)
     feedback: FeedbackType
-    position: int = Field(..., ge=0, le=4)
+    position: int = Field(..., ge=0, le=WORD_LENGTH - 1)
 
 
 class GuessResult(BaseModel):
     """Result of a single guess."""
 
-    guess: str = Field(..., min_length=5, max_length=5)
-    feedback: list[FeedbackType] = Field(..., min_length=5, max_length=5)
+    guess: str = Field(..., min_length=WORD_LENGTH, max_length=WORD_LENGTH)
+    feedback: list[FeedbackType] = Field(
+        ..., min_length=WORD_LENGTH, max_length=WORD_LENGTH
+    )
     is_correct: bool = False
 
     @classmethod
@@ -64,7 +68,7 @@ class GuessResult(BaseModel):
 class GameState(BaseModel):
     """Current state of the Wordle game."""
 
-    turn: int = Field(default=1, ge=1, le=6)
+    turn: int = Field(default=1, ge=1, le=MAX_TURNS)
     guesses: list[GuessResult] = Field(default_factory=list)
     possible_answers: list[str] = Field(default_factory=list)
     is_solved: bool = False
