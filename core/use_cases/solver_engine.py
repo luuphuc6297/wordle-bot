@@ -19,7 +19,7 @@ class SolverEngine:
 
     def __init__(
         self, time_budget_seconds: float = 5.0, max_workers: int | None = None
-    ):
+    ) -> None:
         """Initialize the solver engine.
 
         Args:
@@ -75,7 +75,7 @@ class SolverEngine:
                 ):  # Leave some buffer
                     break
 
-                future = executor.submit(
+                future: Future[float] = executor.submit(
                     self._calculate_entropy_for_word, guess_word, possible_answers_array
                 )
                 futures[future] = guess_word
@@ -117,16 +117,16 @@ class SolverEngine:
         # Simulate feedback for each possible answer
         for answer in possible_answers:
             answer: str = str(answer)
-            pattern: str = self._simulate_feedback(guess_word, answer)
+            pattern: str = self._simulate_feedback(guess=guess_word, answer=answer)
             pattern_counts[pattern] += 1
 
         # Calculate Shannon entropy
-        total_answers = len(possible_answers)
-        entropy = 0.0
+        total_answers: int = len(possible_answers)
+        entropy: float = 0.0
 
         for count in pattern_counts.values():
             if count > 0:
-                probability = count / total_answers
+                probability: float = count / total_answers
                 entropy -= probability * math.log2(probability)
 
         return entropy
@@ -150,7 +150,7 @@ class SolverEngine:
             raise ValueError("Words must be exactly 5 letters")
 
         # Initialize feedback array
-        feedback = ["-"] * 5
+        feedback: list[str] = ["-"] * 5
 
         # Count letter frequencies in the answer
         answer_letter_counts: defaultdict[str, int] = defaultdict(int)
@@ -166,7 +166,7 @@ class SolverEngine:
         # Second pass: Mark present but wrong position (yellow)
         for i in range(5):
             if feedback[i] != "+":  # Not already marked as correct
-                letter = guess[i]
+                letter: str = guess[i]
                 if answer_letter_counts[letter] > 0:
                     feedback[i] = "o"
                     answer_letter_counts[letter] -= 1
@@ -197,19 +197,21 @@ class SolverEngine:
         Returns:
             Detailed entropy calculation result
         """
-        start_time = time.time()
+        start_time: float = time.time()
 
         possible_answers_array: np.ndarray = np.array(possible_answers)
-        entropy = self._calculate_entropy_for_word(guess_word, possible_answers_array)
+        entropy: float = self._calculate_entropy_for_word(
+            guess_word=guess_word, possible_answers=possible_answers_array
+        )
 
         # Count unique patterns
         patterns: set[str] = set()
         for answer in possible_answers:
             answer: str = str(answer)
-            pattern: str = self._simulate_feedback(guess_word, answer)
+            pattern: str = self._simulate_feedback(guess=guess_word, answer=answer)
             patterns.add(pattern)
 
-        calculation_time = time.time() - start_time
+        calculation_time: float = time.time() - start_time
 
         return EntropyCalculation(
             word=guess_word,

@@ -2,9 +2,10 @@
 
 import logging
 import time
-from typing import TypedDict
+from typing import Any, TypedDict
 
-from core.use_cases.game_state_manager import GameStateManager
+from core.domain.models import EntropyCalculation
+from core.use_cases.game_state_manager import GameStateManager, GameSummaryDict
 from core.use_cases.solver_engine import SolverEngine
 from infrastructure.api.game_client import GameClient, WordleAPIError
 from infrastructure.data.word_lexicon import WordLexicon
@@ -71,7 +72,7 @@ class Orchestrator:
         solver_time_budget: float = 5.0,
         show_rich_display: bool = True,
         show_detailed: bool = True,
-    ):
+    ) -> None:
         """Initialize the orchestrator.
 
         Args:
@@ -80,7 +81,7 @@ class Orchestrator:
             show_rich_display: Whether to show rich console display
             show_detailed: Whether to show detailed entropy information
         """
-        self.logger: logging.Logger = logging.getLogger(__name__)
+        self.logger: logging.Logger = logging.getLogger(name=__name__)
 
         # Initialize components
         self.lexicon: WordLexicon = WordLexicon()
@@ -97,7 +98,7 @@ class Orchestrator:
         )
 
         self.logger.info(
-            f"Orchestrator initialized with {len(self.lexicon.answers)} possible answers"
+            msg=f"Orchestrator initialized with {len(self.lexicon.answers)} possible answers"
         )
 
     def solve_daily_puzzle(self) -> GameSummary:
@@ -106,7 +107,7 @@ class Orchestrator:
         Returns:
             Dictionary containing the game solution results
         """
-        self.logger.info("Starting daily puzzle solution")
+        self.logger.info(msg="Starting daily puzzle solution")
         game_start_time = time.time()
 
         try:
@@ -121,25 +122,25 @@ class Orchestrator:
                 turn_number = current_state.turn
 
                 self.logger.info(
-                    f"Turn {turn_number}: {len(current_state.possible_answers)} possible answers remaining"
+                    msg=f"Turn {turn_number}: {len(current_state.possible_answers)} possible answers remaining"
                 )
 
                 # Calculate optimal guess
-                turn_start_time = time.time()
-                best_guess = self.solver_engine.find_best_guess(
-                    current_state.possible_answers, turn_number
+                turn_start_time: float = time.time()
+                best_guess: str = self.solver_engine.find_best_guess(
+                    current_state.possible_answers, turn=turn_number
                 )
                 calculation_time = time.time() - turn_start_time
 
                 self.logger.info(
-                    f"Selected guess '{best_guess}' in {calculation_time:.2f}s"
+                    msg=f"Selected guess '{best_guess}' in {calculation_time:.2f}s"
                 )
 
                 # Submit guess and get feedback
                 try:
                     guess_result = self.game_client.submit_guess(best_guess)
                     self.logger.info(
-                        f"Guess '{guess_result.guess}' -> {guess_result.to_pattern_string()} "
+                        msg=f"Guess '{guess_result.guess}' -> {guess_result.to_pattern_string()} "
                         + f"(Correct: {guess_result.is_correct})"
                     )
 
@@ -148,18 +149,18 @@ class Orchestrator:
                         self.game_state_manager.add_guess_result(guess_result)
 
                 except WordleAPIError as e:
-                    self.logger.error(f"API error during guess submission: {e}")
+                    self.logger.error(msg=f"API error during guess submission: {e}")
                     # Could implement fallback logic here
                     raise
 
             # Game completed - generate final results
-            total_game_time = time.time() - game_start_time
-            final_summary = self._generate_final_summary(total_game_time)
+            total_game_time: float = time.time() - game_start_time
+            final_summary: GameSummary = self._generate_final_summary(total_game_time)
 
             return final_summary
 
         except Exception as e:
-            self.logger.error(f"Error during puzzle solving: {e}")
+            self.logger.error(msg=f"Error during puzzle solving: {e}")
             raise
         finally:
             # Cleanup
@@ -169,16 +170,16 @@ class Orchestrator:
         """Initialize a new game session."""
         try:
             # Start new game via API
-            start_response = self.game_client.start_game()
-            self.logger.info(f"Game started: {start_response}")
+            start_response: dict[str, Any] = self.game_client.start_game()
+            self.logger.info(msg=f"Game started: {start_response}")
 
             # Initialize game state manager with all possible answers
             self.game_state_manager = GameStateManager()
 
-            self.logger.info("Game initialization completed")
+            self.logger.info(msg="Game initialization completed")
 
         except WordleAPIError as e:
-            self.logger.error(f"Failed to initialize game: {e}")
+            self.logger.error(msg=f"Failed to initialize game: {e}")
             raise
 
     def _generate_final_summary(self, total_time: float) -> GameSummary:
@@ -193,11 +194,11 @@ class Orchestrator:
         if not self.game_state_manager:
             raise RuntimeError("Game state manager is not initialized")
 
-        game_summary = self.game_state_manager.get_game_summary()
+        game_summary: GameSummaryDict = self.game_state_manager.get_game_summary()
 
         # Type-safe access to game_summary
-        guesses = game_summary["guesses"]
-        remaining_answers = game_summary["possible_answers"]
+        guesses: list[dict[str, str | bool]] = game_summary["guesses"]
+        remaining_answers: list[str] = game_summary["possible_answers"]
 
         final_summary: GameSummary = {
             "game_result": {
@@ -207,8 +208,10 @@ class Orchestrator:
                 "final_answer": (str(guesses[-1]["guess"]) if guesses else None),
             },
             "performance_metrics": {
-                "total_game_time_seconds": round(total_time, 2),
-                "average_time_per_turn": round(total_time / max(1, len(guesses)), 2),
+                "total_game_time_seconds": round(number=total_time, ndigits=2),
+                "average_time_per_turn": round(
+                    number=total_time / max(1, len(guesses)), ndigits=2
+                ),
                 "remaining_possibilities": remaining_answers,
             },
             "guess_history": guesses,
@@ -302,27 +305,35 @@ class Orchestrator:
                 )
 
             # Get best guess with timing
-            guess_start_time = time.time()
-            guess = self.solver_engine.find_best_guess(current_answers, turn)
-            calculation_time = time.time() - guess_start_time
+            guess_start_time: float = time.time()
+            guess: str = self.solver_engine.find_best_guess(
+                possible_answers=current_answers, turn=turn
+            )
+            calculation_time: float = time.time() - guess_start_time
 
             # Calculate entropy for display
-            entropy = 0.0
+            entropy: float = 0.0
             if len(current_answers) > 1 and self.display and self.display.show_detailed:
-                entropy_calc = self.solver_engine.calculate_detailed_entropy(
-                    guess, current_answers
+                entropy_calc: (
+                    EntropyCalculation
+                ) = self.solver_engine.calculate_detailed_entropy(
+                    guess_word=guess, possible_answers=current_answers
                 )
                 entropy = entropy_calc.entropy
 
             # Show guess submission
             if self.display:
                 self.display.show_guess_submission(
-                    turn, guess, len(current_answers), entropy, calculation_time
+                    turn,
+                    guess,
+                    remaining_count=len(current_answers),
+                    entropy=entropy,
+                    calculation_time=calculation_time,
                 )
 
             # Simulate feedback
-            feedback_pattern = self.solver_engine.simulate_feedback(
-                guess, target_answer
+            feedback_pattern: str = self.solver_engine.simulate_feedback(
+                guess, answer=target_answer
             )
 
             # Create guess result
@@ -339,7 +350,7 @@ class Orchestrator:
                     guess_result, game_manager.get_remaining_answers_count()
                 )
 
-            self.logger.info(f"Turn {turn}: {guess} -> {feedback_pattern}")
+            self.logger.info(msg=f"Turn {turn}: {guess} -> {feedback_pattern}")
 
             turn += 1
 
