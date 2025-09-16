@@ -2,9 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "**" ]
   pull_request:
-    branches: [ main ]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -30,13 +31,19 @@ jobs:
 
     - name: Run ruff format check
       run: |
+        echo "[CI] Ruff version"
+        uv run ruff --version
         echo "[CI] Ruff format check"
-        uv run ruff format . --check --output-format=github
+        uv run ruff format . --check --output-format=github --verbose
 
     - name: Run ruff lint
       run: |
         echo "[CI] Ruff lint"
-        uv run ruff check . --diff --output-format=github
+        uv run ruff check . --diff --output-format=github --verbose || {
+          echo "[CI] Ruff lint failed. Re-running without GitHub annotations for raw output";
+          uv run ruff check . --diff;
+          exit 1;
+        }
 
     - name: Run tests
       run: |
