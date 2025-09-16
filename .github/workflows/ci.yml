@@ -24,11 +24,18 @@ jobs:
 
     - name: Install dependencies
       run: |
+        echo "[CI] Start uv sync"
         uv sync --all-extras --frozen
+        echo "[CI] Done uv sync"
 
-    - name: Run format check
+    - name: Run ruff format check
       run: |
+        echo "[CI] Ruff format check"
         uv run ruff format . --check --output-format=github
+
+    - name: Run ruff lint
+      run: |
+        echo "[CI] Ruff lint"
         uv run ruff check . --diff --output-format=github
 
     - name: Run tests

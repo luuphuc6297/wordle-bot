@@ -6,7 +6,8 @@ WORKDIR /app
 RUN pip install --no-cache-dir uv
 
 # Copy project metadata and lockfile first for better Docker layer caching
-COPY pyproject.toml uv.lock ./
+# Include LICENSE/README because build backend validates these during editable build
+COPY pyproject.toml uv.lock LICENSE README.md ./
 
 # Sync dependencies exactly as locked, without dev extras
 RUN uv sync --frozen --no-dev
