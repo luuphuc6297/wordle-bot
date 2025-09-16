@@ -7,6 +7,7 @@ from typing import Any, TypedDict
 from config.settings import Settings
 from config.settings import settings as default_settings
 from core.domain.models import EntropyCalculation
+from core.use_cases.daily_game_state_manager import DailyGameStateManager
 from core.use_cases.game_state_manager import GameStateManager, GameSummaryDict
 from core.use_cases.solver_engine import SolverEngine
 from infrastructure.api.game_client import GameClient, WordleAPIError
@@ -149,67 +150,57 @@ class Orchestrator:
                 total_game_time = time.time() - game_start_time
                 return self._generate_final_summary(total_game_time)
 
-            # Step 2: Update game state with Daily API feedback
-            if self.game_state_manager:
-                self.game_state_manager.add_guess_result(daily_result)
-                possible_answers = self.game_state_manager.get_possible_answers()
-                self.logger.info(
-                    f"Daily API revealed target has {len(possible_answers)} possible answers"
-                )
+            # Step 2: Update game state with Daily API feedback using improved manager
+            daily_game_manager = DailyGameStateManager(app_settings=self.settings)
+            daily_game_manager.add_guess_result(daily_result)
+            possible_answers = daily_game_manager.get_possible_answers()
+            self.logger.info(
+                f"Daily API revealed target has {len(possible_answers)} possible answers"
+            )
 
-            # Step 3: Find the actual target word by testing possible answers
+            # Step 3: Determine the actual target using /word/{candidate} that matches first feedback
             target_word = None
-            if self.game_state_manager:
-                current_answers = self.game_state_manager.get_possible_answers()
-                for candidate in current_answers:
-                    try:
-                        # Test if this candidate is the target word
-                        test_result = self.game_client.submit_word_target_guess(
-                            candidate, initial_guess
-                        )
-                        if (
-                            test_result.to_pattern_string()
-                            == daily_result.to_pattern_string()
-                        ):
-                            target_word = candidate
-                            self.logger.info(f"Found daily target word: {target_word}")
-                            break
-                    except Exception as e:
-                        self.logger.debug(f"Testing {candidate}: {e}")
-                        continue
+            current_answers = daily_game_manager.get_possible_answers()
+            for candidate in current_answers:
+                try:
+                    test_result = self.game_client.submit_word_target_guess(
+                        candidate, initial_guess
+                    )
+                    if (
+                        test_result.to_pattern_string()
+                        == daily_result.to_pattern_string()
+                    ):
+                        target_word = candidate
+                        self.logger.info(f"Found daily target word: {target_word}")
+                        break
+                except Exception as e:
+                    self.logger.debug(f"Testing {candidate}: {e}")
+                    continue
 
             if not target_word:
                 self.logger.warning("Could not determine target word from Daily API")
                 # Fall back to original strategy
                 return self._solve_daily_original()
 
-            # Step 4: Use Word-target API to continue with entropy algorithm
+            # Step 4: Continue solving using /word/{target}
             turn = 2
             max_turns = 6
 
-            while (
-                turn <= max_turns
-                and self.game_state_manager
-                and not self.game_state_manager.is_game_over()
-            ):
-                current_answers = self.game_state_manager.get_possible_answers()
+            while turn <= max_turns and not daily_game_manager.is_game_over():
+                current_answers = daily_game_manager.get_possible_answers()
 
                 if len(current_answers) == 0:
                     self.logger.warning("No possible answers remaining")
                     break
 
                 if len(current_answers) == 1:
-                    # Only one possible answer left
                     final_guess = current_answers[0]
                     self.logger.info(f"Final guess: {final_guess}")
-
-                    # Submit the final guess
                     try:
                         final_result = self.game_client.submit_word_target_guess(
                             target_word, final_guess
                         )
-                        self.game_state_manager.add_guess_result(final_result)
-
+                        daily_game_manager.add_guess_result(final_result)
                         if final_result.is_correct:
                             self.logger.info(
                                 f"🎉 SOLVED! Daily target word: {target_word} in {turn} turns"
@@ -219,32 +210,25 @@ class Orchestrator:
                         self.logger.error(f"Error submitting final guess: {e}")
                         break
 
-                # Use entropy algorithm to find best guess
                 best_guess = self.solver_engine.find_best_guess(current_answers, turn)
                 self.logger.info(
                     f"Turn {turn}: Guessing '{best_guess}' from {len(current_answers)} possible answers"
                 )
-
-                # Submit guess using Word-target API
                 try:
                     guess_result = self.game_client.submit_word_target_guess(
                         target_word, best_guess
                     )
-                    self.game_state_manager.add_guess_result(guess_result)
-
-                    # Add display feedback for consistency
+                    daily_game_manager.add_guess_result(guess_result)
                     if self.display:
                         self.display.show_feedback(
                             guess_result,
-                            len(self.game_state_manager.get_possible_answers()),
+                            len(daily_game_manager.get_possible_answers()),
                         )
-
                     if guess_result.is_correct:
                         self.logger.info(
                             f"🎉 SOLVED! Daily target word: {target_word} in {turn} turns"
                         )
                         break
-
                 except Exception as e:
                     self.logger.error(f"Error submitting guess: {e}")
                     break
@@ -253,7 +237,9 @@ class Orchestrator:
 
             # Game completed - generate final results
             total_game_time = time.time() - game_start_time
-            final_summary = self._generate_final_summary(total_game_time)
+            final_summary = self._generate_daily_final_summary(
+                total_game_time, daily_game_manager
+            )
 
             return final_summary
 
@@ -263,6 +249,58 @@ class Orchestrator:
         finally:
             # Cleanup
             self.game_client.close()
+
+    def _generate_daily_final_summary(
+        self, total_time: float, daily_game_manager: DailyGameStateManager
+    ) -> GameSummary:
+        """Generate final game summary for Daily mode.
+
+        Args:
+            total_time: Total time taken for the entire game
+            daily_game_manager: The daily game state manager
+
+        Returns:
+            Comprehensive game summary
+        """
+        game_summary: GameSummaryDict = daily_game_manager.get_game_summary()
+
+        # Type-safe access to game_summary
+        guesses: list[dict[str, str | bool]] = game_summary["guesses"]
+        remaining_answers: list[str] = game_summary["possible_answers"]
+
+        final_summary: GameSummary = {
+            "game_result": {
+                "solved": daily_game_manager.is_solved(),
+                "failed": daily_game_manager.is_failed(),
+                "total_turns": len(guesses),
+                "final_answer": (str(guesses[-1]["guess"]) if guesses else None),
+            },
+            "performance_metrics": {
+                "total_game_time_seconds": round(number=total_time, ndigits=2),
+                "average_time_per_turn": round(
+                    number=total_time / max(1, len(guesses)), ndigits=2
+                ),
+                "remaining_possibilities": remaining_answers,
+            },
+            "guess_history": guesses,
+            "lexicon_stats": self.lexicon.get_stats(),
+            "timestamp": time.time(),
+        }
+
+        # Log final result
+        if daily_game_manager.is_solved():
+            self.logger.info(
+                f"PUZZLE SOLVED! Answer: {final_summary['game_result']['final_answer']} "
+                + f"in {final_summary['game_result']['total_turns']} turns "
+                + f"({final_summary['performance_metrics']['total_game_time_seconds']}s)"
+            )
+        else:
+            self.logger.warning(
+                f"Puzzle failed after {final_summary['game_result']['total_turns']} turns "
+                + f"({final_summary['performance_metrics']['total_game_time_seconds']}s)"
+            )
+
+        return final_summary
 
     def _solve_daily_original(self) -> GameSummary:
         """Original daily puzzle solving strategy as fallback."""
@@ -822,16 +860,37 @@ class Orchestrator:
                 else:
                     raise ValueError(f"Invalid mode: {mode}")
 
-                # Convert to benchmark format
-                return {
-                    "target_word": result.get("target_answer", "unknown"),
-                    "won": result.get("solved", False),
-                    "guesses_used": result.get("turns_used", 0),
-                    "guesses": [],  # Empty for now, could be populated from final_state
-                    "game_duration": result.get("simulation_time", 0.0),
-                    "final_state": result.get("final_state", {}),
-                    "success": result.get("solved", False),
-                }
+                # Convert to benchmark format per mode/result shape
+                if (
+                    mode == "daily"
+                    and isinstance(result, dict)
+                    and "game_result" in result
+                ):
+                    game_result = result["game_result"]
+                    perf = result.get("performance_metrics", {})
+                    won = bool(game_result.get("solved", False))
+                    turns = int(game_result.get("total_turns", 0))
+                    return {
+                        "target_word": "daily",
+                        "won": won,
+                        "guesses_used": turns,
+                        "guesses": [],
+                        "game_duration": float(
+                            perf.get("total_game_time_seconds", 0.0)
+                        ),
+                        "final_state": result,
+                        "success": won,
+                    }
+                else:
+                    return {
+                        "target_word": result.get("target_answer", "unknown"),
+                        "won": result.get("solved", False),
+                        "guesses_used": result.get("turns_used", 0),
+                        "guesses": [],
+                        "game_duration": result.get("simulation_time", 0.0),
+                        "final_state": result.get("final_state", {}),
+                        "success": result.get("solved", False),
+                    }
             except Exception as e:
                 self.logger.error(f"Error in online game: {e}")
                 return {

@@ -488,8 +488,8 @@ def output_results(results: Mapping[str, Any], output_format: str) -> None:
 
             print("\nGuess history:")
             for i, guess in enumerate(results["guess_history"], 1):
-                status = "✅" if guess["is_correct"] else "⭕"
-                print(f"  {i}. {guess['guess']} -> {guess['pattern']} {status}")
+                status = "✅" if guess.get("correct", False) else "⭕"
+                print(f"  {i}. {guess['guess']} -> {guess['feedback']} {status}")
 
         elif "target_answer" in results:
             # Simulation results
