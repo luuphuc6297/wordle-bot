@@ -34,7 +34,7 @@ jobs:
         echo "[CI] Ruff version"
         uv run ruff --version
         echo "[CI] Ruff format check"
-        uv run ruff format . --check --output-format=github --verbose
+        uv run ruff format . --check --verbose
 
     - name: Run ruff lint
       run: |
