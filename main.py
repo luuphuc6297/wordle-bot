@@ -66,6 +66,13 @@ def main() -> int:
             result = run_benchmark(orchestrator, args)
         elif args.command == "analytics":
             result = run_analytics(orchestrator, args)
+        elif args.command == "play-random":
+            result = orchestrator.play_random_game()
+        elif args.command == "play-word":
+            if not hasattr(args, "target") or not args.target:
+                logger.error("Target answer required for play-word")
+                return 1
+            result = orchestrator.play_word_target(args.target)
         else:
             logger.error(f"Unknown command: {args.command}")
             return 1
@@ -112,7 +119,15 @@ Examples:
 
     parser.add_argument(
         "command",
-        choices=["solve", "simulate", "analyze", "benchmark", "analytics"],
+        choices=[
+            "solve",
+            "simulate",
+            "analyze",
+            "benchmark",
+            "analytics",
+            "play-random",
+            "play-word",
+        ],
         help="Command to execute",
     )
 

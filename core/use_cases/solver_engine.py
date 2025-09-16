@@ -13,6 +13,7 @@ from config.settings import settings as default_settings
 from core.domain.constants import TIME_BUDGET_BUFFER, WORD_LENGTH
 from core.domain.models import EntropyCalculation
 from infrastructure.data.word_lexicon import WordLexicon
+from utils.logging_config import get_logger
 
 
 class SolverEngine:
@@ -43,6 +44,7 @@ class SolverEngine:
         if self.settings.OPTIMAL_FIRST_GUESS:
             self.OPTIMAL_FIRST_GUESS = self.settings.OPTIMAL_FIRST_GUESS.upper()
         self.lexicon: WordLexicon = WordLexicon()
+        self.logger = get_logger(__name__)
 
         # Convert to numpy arrays for better performance
         self._all_guesses: np.ndarray = np.array(self.lexicon.allowed_guesses)
@@ -60,6 +62,11 @@ class SolverEngine:
         """
         # Use pre-computed first guess
         if turn == 1:
+            return self.OPTIMAL_FIRST_GUESS
+
+        # If no answers remain, this shouldn't happen but handle gracefully
+        if len(possible_answers) == 0:
+            self.logger.warning("No possible answers remaining, using fallback guess")
             return self.OPTIMAL_FIRST_GUESS
 
         # If only one answer remains, guess it

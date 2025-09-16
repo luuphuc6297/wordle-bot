@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Any, TypedDict
+from typing import TypedDict
 
 from config.settings import Settings
 from config.settings import settings as default_settings
@@ -177,14 +177,10 @@ class Orchestrator:
     def _initialize_game(self) -> None:
         """Initialize a new game session."""
         try:
-            # Start new game via API
-            start_response: dict[str, Any] = self.game_client.start_game()
-            self.logger.info(msg=f"Game started: {start_response}")
-
             # Initialize game state manager with all possible answers
             self.game_state_manager = GameStateManager(app_settings=self.settings)
 
-            self.logger.info(msg="Game initialization completed")
+            self.logger.info(msg="Game initialization completed (daily mode)")
 
         except WordleAPIError as e:
             self.logger.error(msg=f"Failed to initialize game: {e}")
@@ -389,5 +385,91 @@ class Orchestrator:
                 "remaining_turns": game_manager.get_game_summary()["remaining_turns"],
                 "guesses": game_manager.get_game_summary()["guesses"],
                 "possible_answers": game_manager.get_game_summary()["possible_answers"],
+            },
+        }
+
+    def play_random_game(self) -> SimulationResult:
+        """Play a game using the random API mode (/random)."""
+        if self.display:
+            self.display.print_header()
+            self.display.start_new_game("random")
+
+        game_manager = GameStateManager()
+        import time as _t
+
+        start = _t.time()
+        turn = 1
+
+        while not game_manager.is_game_over() and turn <= 6:
+            current_answers = game_manager.get_possible_answers()
+
+            guess = self.solver_engine.find_best_guess(current_answers, turn)
+            # Submit to random API
+            guess_result = self.game_client.submit_random_guess(guess)
+            game_manager.add_guess_result(guess_result)
+            if self.display:
+                self.display.show_feedback(
+                    guess_result, game_manager.get_remaining_answers_count()
+                )
+            turn += 1
+
+        summary = game_manager.get_game_summary()
+        return {
+            "target_answer": "random",
+            "solved": game_manager.is_solved(),
+            "turns_used": len(game_manager.get_current_state().guesses),
+            "simulation_time": round(_t.time() - start, 2),
+            "final_state": {
+                "turn": summary["turn"],
+                "total_guesses": summary["total_guesses"],
+                "remaining_answers": summary["remaining_answers"],
+                "is_solved": summary["is_solved"],
+                "is_failed": summary["is_failed"],
+                "remaining_turns": summary["remaining_turns"],
+                "guesses": summary["guesses"],
+                "possible_answers": summary["possible_answers"],
+            },
+        }
+
+    def play_word_target(self, target_answer: str) -> SimulationResult:
+        """Play a game against a specific target using /word/{target}."""
+        if self.display:
+            self.display.print_header()
+            self.display.start_new_game(f"word_{target_answer}")
+
+        game_manager = GameStateManager()
+        import time as _t
+
+        start = _t.time()
+        turn = 1
+
+        while not game_manager.is_game_over() and turn <= 6:
+            current_answers = game_manager.get_possible_answers()
+            guess = self.solver_engine.find_best_guess(current_answers, turn)
+            guess_result = self.game_client.submit_word_target_guess(
+                target_answer, guess
+            )
+            game_manager.add_guess_result(guess_result)
+            if self.display:
+                self.display.show_feedback(
+                    guess_result, game_manager.get_remaining_answers_count()
+                )
+            turn += 1
+
+        summary = game_manager.get_game_summary()
+        return {
+            "target_answer": target_answer,
+            "solved": game_manager.is_solved(),
+            "turns_used": len(game_manager.get_current_state().guesses),
+            "simulation_time": round(_t.time() - start, 2),
+            "final_state": {
+                "turn": summary["turn"],
+                "total_guesses": summary["total_guesses"],
+                "remaining_answers": summary["remaining_answers"],
+                "is_solved": summary["is_solved"],
+                "is_failed": summary["is_failed"],
+                "remaining_turns": summary["remaining_turns"],
+                "guesses": summary["guesses"],
+                "possible_answers": summary["possible_answers"],
             },
         }
