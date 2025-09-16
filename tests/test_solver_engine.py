@@ -158,9 +158,9 @@ class TestFeedbackSimulation:
 
         for guess, answer, expected in test_cases:
             result = solver._simulate_feedback(guess, answer)
-            assert (
-                result == expected
-            ), f"Failed: {guess} vs {answer}, got {result}, expected {expected}"
+            assert result == expected, (
+                f"Failed: {guess} vs {answer}, got {result}, expected {expected}"
+            )
 
 
 class TestEntropyCalculation:

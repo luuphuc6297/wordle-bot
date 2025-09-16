@@ -314,10 +314,10 @@ class Orchestrator:
             # Calculate entropy for display
             entropy: float = 0.0
             if len(current_answers) > 1 and self.display and self.display.show_detailed:
-                entropy_calc: (
-                    EntropyCalculation
-                ) = self.solver_engine.calculate_detailed_entropy(
-                    guess_word=guess, possible_answers=current_answers
+                entropy_calc: EntropyCalculation = (
+                    self.solver_engine.calculate_detailed_entropy(
+                        guess_word=guess, possible_answers=current_answers
+                    )
                 )
                 entropy = entropy_calc.entropy
 
