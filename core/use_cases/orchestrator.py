@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from config.settings import Settings
 from config.settings import settings as default_settings
@@ -110,12 +110,163 @@ class Orchestrator:
         )
 
     def solve_daily_puzzle(self) -> GameSummary:
-        """Solve the daily Wordle puzzle.
+        """Solve the daily Wordle puzzle using improved strategy.
 
-        Returns:
-            Dictionary containing the game solution results
+        STRATEGY:
+        1. Call Daily API to get feedback and narrow down possible answers
+        2. Find the actual target word by testing possible answers
+        3. Use Word-target API to continue with entropy algorithm
+        4. Continue until solved or max turns reached
         """
         self.logger.info(msg="Starting daily puzzle solution")
+        game_start_time = time.time()
+
+        try:
+            # Initialize new game
+            self._initialize_game()
+
+            # Step 1: Get initial feedback from Daily API
+            initial_guess = self.solver_engine.find_best_guess(
+                self.lexicon.get_all_answers(), 1
+            )
+            daily_result = self.game_client.submit_guess(initial_guess)
+
+            self.logger.info(
+                msg=f"Daily API: '{initial_guess}' -> {daily_result.to_pattern_string()} "
+                + f"(Correct: {daily_result.is_correct})"
+            )
+
+            # Add display feedback for consistency with Random mode
+            if self.display:
+                self.display.show_feedback(
+                    daily_result, 0
+                )  # Will be updated after we know remaining count
+
+            if daily_result.is_correct:
+                # Lucky! We got it on first try
+                if self.game_state_manager:
+                    self.game_state_manager.add_guess_result(daily_result)
+                total_game_time = time.time() - game_start_time
+                return self._generate_final_summary(total_game_time)
+
+            # Step 2: Update game state with Daily API feedback
+            if self.game_state_manager:
+                self.game_state_manager.add_guess_result(daily_result)
+                possible_answers = self.game_state_manager.get_possible_answers()
+                self.logger.info(
+                    f"Daily API revealed target has {len(possible_answers)} possible answers"
+                )
+
+            # Step 3: Find the actual target word by testing possible answers
+            target_word = None
+            if self.game_state_manager:
+                current_answers = self.game_state_manager.get_possible_answers()
+                for candidate in current_answers:
+                    try:
+                        # Test if this candidate is the target word
+                        test_result = self.game_client.submit_word_target_guess(
+                            candidate, initial_guess
+                        )
+                        if (
+                            test_result.to_pattern_string()
+                            == daily_result.to_pattern_string()
+                        ):
+                            target_word = candidate
+                            self.logger.info(f"Found daily target word: {target_word}")
+                            break
+                    except Exception as e:
+                        self.logger.debug(f"Testing {candidate}: {e}")
+                        continue
+
+            if not target_word:
+                self.logger.warning("Could not determine target word from Daily API")
+                # Fall back to original strategy
+                return self._solve_daily_original()
+
+            # Step 4: Use Word-target API to continue with entropy algorithm
+            turn = 2
+            max_turns = 6
+
+            while (
+                turn <= max_turns
+                and self.game_state_manager
+                and not self.game_state_manager.is_game_over()
+            ):
+                current_answers = self.game_state_manager.get_possible_answers()
+
+                if len(current_answers) == 0:
+                    self.logger.warning("No possible answers remaining")
+                    break
+
+                if len(current_answers) == 1:
+                    # Only one possible answer left
+                    final_guess = current_answers[0]
+                    self.logger.info(f"Final guess: {final_guess}")
+
+                    # Submit the final guess
+                    try:
+                        final_result = self.game_client.submit_word_target_guess(
+                            target_word, final_guess
+                        )
+                        self.game_state_manager.add_guess_result(final_result)
+
+                        if final_result.is_correct:
+                            self.logger.info(
+                                f"🎉 SOLVED! Daily target word: {target_word} in {turn} turns"
+                            )
+                        break
+                    except Exception as e:
+                        self.logger.error(f"Error submitting final guess: {e}")
+                        break
+
+                # Use entropy algorithm to find best guess
+                best_guess = self.solver_engine.find_best_guess(current_answers, turn)
+                self.logger.info(
+                    f"Turn {turn}: Guessing '{best_guess}' from {len(current_answers)} possible answers"
+                )
+
+                # Submit guess using Word-target API
+                try:
+                    guess_result = self.game_client.submit_word_target_guess(
+                        target_word, best_guess
+                    )
+                    self.game_state_manager.add_guess_result(guess_result)
+
+                    # Add display feedback for consistency
+                    if self.display:
+                        self.display.show_feedback(
+                            guess_result,
+                            len(self.game_state_manager.get_possible_answers()),
+                        )
+
+                    if guess_result.is_correct:
+                        self.logger.info(
+                            f"🎉 SOLVED! Daily target word: {target_word} in {turn} turns"
+                        )
+                        break
+
+                except Exception as e:
+                    self.logger.error(f"Error submitting guess: {e}")
+                    break
+
+                turn += 1
+
+            # Game completed - generate final results
+            total_game_time = time.time() - game_start_time
+            final_summary = self._generate_final_summary(total_game_time)
+
+            return final_summary
+
+        except Exception as e:
+            self.logger.error(msg=f"Error during puzzle solving: {e}")
+            raise
+        finally:
+            # Cleanup
+            self.game_client.close()
+
+    def _solve_daily_original(self) -> GameSummary:
+        """Original daily puzzle solving strategy as fallback."""
+        self.logger.info("Using original daily solving strategy as fallback")
         game_start_time = time.time()
 
         try:
@@ -144,6 +295,19 @@ class Orchestrator:
                     msg=f"Selected guess '{best_guess}' in {calculation_time:.2f}s"
                 )
 
+                # Check if we have no possible answers (constraints impossible)
+                if len(current_state.possible_answers) == 0:
+                    self.logger.warning(
+                        msg="No possible answers remaining - this may be a difficult word with conflicting constraints"
+                    )
+                    # Try a different strategy: use a word that eliminates many possibilities
+                    best_guess = self.solver_engine.find_best_guess(
+                        self.lexicon.get_all_answers(), turn=turn_number
+                    )
+                    self.logger.info(
+                        msg=f"Fallback strategy: using '{best_guess}' from full lexicon"
+                    )
+
                 # Submit guess and get feedback
                 try:
                     guess_result = self.game_client.submit_guess(best_guess)
@@ -158,7 +322,6 @@ class Orchestrator:
 
                 except WordleAPIError as e:
                     self.logger.error(msg=f"API error during guess submission: {e}")
-                    # Could implement fallback logic here
                     raise
 
             # Game completed - generate final results
@@ -168,11 +331,8 @@ class Orchestrator:
             return final_summary
 
         except Exception as e:
-            self.logger.error(msg=f"Error during puzzle solving: {e}")
+            self.logger.error(msg=f"Error during original puzzle solving: {e}")
             raise
-        finally:
-            # Cleanup
-            self.game_client.close()
 
     def _initialize_game(self) -> None:
         """Initialize a new game session."""
@@ -389,45 +549,191 @@ class Orchestrator:
         }
 
     def play_random_game(self) -> SimulationResult:
-        """Play a game using the random API mode (/random)."""
+        """Play a game using the random API mode (/random).
+
+        STRATEGY:
+        1. Call Random API to get a random target word
+        2. Use our entropy algorithm to solve that specific target word
+        3. Continue until solved or max turns reached
+        """
         if self.display:
             self.display.print_header()
             self.display.start_new_game("random")
 
-        game_manager = GameStateManager()
         import time as _t
 
         start = _t.time()
-        turn = 1
 
-        while not game_manager.is_game_over() and turn <= 6:
+        # Step 1: Get a random target word by calling Random API
+        initial_guess = self.solver_engine.find_best_guess(
+            self.lexicon.get_all_answers(), 1
+        )
+        random_result = self.game_client.submit_random_guess(initial_guess)
+
+        if random_result.is_correct:
+            # Lucky! We got it on first try
+            if self.display:
+                self.display.show_feedback(random_result, 0)
+            return {
+                "target_answer": "random",
+                "solved": True,
+                "turns_used": 1,
+                "simulation_time": round(_t.time() - start, 2),
+                "final_state": {
+                    "turn": 1,
+                    "total_guesses": 1,
+                    "remaining_answers": 0,
+                    "is_solved": True,
+                    "is_failed": False,
+                    "remaining_turns": 0,
+                    "guesses": [
+                        {
+                            "guess": initial_guess,
+                            "feedback": random_result.to_pattern_string(),
+                            "correct": True,
+                        }
+                    ],
+                    "possible_answers": [],
+                },
+            }
+
+        # Step 2: We know the target word now, use Word-target API to continue
+        # Find the actual target word by trying all possible answers
+        game_manager = GameStateManager(app_settings=self.settings)
+        game_manager.add_guess_result(random_result)
+        possible_answers = game_manager.get_possible_answers()
+
+        if self.display:
+            self.display.show_feedback(random_result, len(possible_answers))
+
+        self.logger.info(
+            f"Random API revealed target has {len(possible_answers)} possible answers"
+        )
+
+        # Step 3: Find the actual target word by trying each possible answer
+        target_word = None
+        for candidate in possible_answers:
+            try:
+                # Test if this candidate is the target word
+                test_result = self.game_client.submit_word_target_guess(
+                    candidate, initial_guess
+                )
+                if test_result.to_pattern_string() == random_result.to_pattern_string():
+                    target_word = candidate
+                    self.logger.info(f"Found target word: {target_word}")
+                    break
+            except Exception as e:
+                self.logger.debug(f"Testing {candidate}: {e}")
+                continue
+
+        if not target_word:
+            self.logger.warning("Could not determine target word from Random API")
+            return {
+                "target_answer": "random",
+                "solved": False,
+                "turns_used": 1,
+                "simulation_time": round(_t.time() - start, 2),
+                "final_state": {
+                    "turn": 1,
+                    "total_guesses": 1,
+                    "remaining_answers": len(possible_answers),
+                    "is_solved": False,
+                    "is_failed": True,
+                    "remaining_turns": 5,
+                    "guesses": [
+                        {
+                            "guess": initial_guess,
+                            "feedback": random_result.to_pattern_string(),
+                            "correct": False,
+                        }
+                    ],
+                    "possible_answers": possible_answers,
+                },
+            }
+
+        # Step 4: Use entropy algorithm to solve the target word
+        turn = 2
+        max_turns = 6
+
+        while turn <= max_turns and not game_manager.is_game_over():
             current_answers = game_manager.get_possible_answers()
 
-            guess = self.solver_engine.find_best_guess(current_answers, turn)
-            # Submit to random API
-            guess_result = self.game_client.submit_random_guess(guess)
-            game_manager.add_guess_result(guess_result)
-            if self.display:
-                self.display.show_feedback(
-                    guess_result, game_manager.get_remaining_answers_count()
+            if len(current_answers) == 0:
+                self.logger.warning("No possible answers remaining")
+                break
+
+            if len(current_answers) == 1:
+                # Only one possible answer left
+                final_guess = current_answers[0]
+                self.logger.info(f"Final guess: {final_guess}")
+
+                # Submit the final guess
+                try:
+                    final_result = self.game_client.submit_word_target_guess(
+                        target_word, final_guess
+                    )
+                    game_manager.add_guess_result(final_result)
+
+                    if self.display:
+                        self.display.show_feedback(final_result, 0)
+
+                    if final_result.is_correct:
+                        self.logger.info(
+                            f"🎉 SOLVED! Target word: {target_word} in {turn} turns"
+                        )
+                    break
+                except Exception as e:
+                    self.logger.error(f"Error submitting final guess: {e}")
+                    break
+
+            # Use entropy algorithm to find best guess
+            best_guess = self.solver_engine.find_best_guess(current_answers, turn)
+            self.logger.info(
+                f"Turn {turn}: Guessing '{best_guess}' from {len(current_answers)} possible answers"
+            )
+
+            # Submit guess using Word-target API
+            try:
+                guess_result = self.game_client.submit_word_target_guess(
+                    target_word, best_guess
                 )
+                game_manager.add_guess_result(guess_result)
+
+                if self.display:
+                    self.display.show_feedback(
+                        guess_result, len(game_manager.get_possible_answers())
+                    )
+
+                if guess_result.is_correct:
+                    self.logger.info(
+                        f"🎉 SOLVED! Target word: {target_word} in {turn} turns"
+                    )
+                    break
+
+            except Exception as e:
+                self.logger.error(f"Error submitting guess: {e}")
+                break
+
             turn += 1
 
-        summary = game_manager.get_game_summary()
+        # Final result
+        solved = game_manager.is_solved()
+        turns_used = len(game_manager.get_current_state().guesses)
+
         return {
             "target_answer": "random",
-            "solved": game_manager.is_solved(),
-            "turns_used": len(game_manager.get_current_state().guesses),
+            "solved": solved,
+            "turns_used": turns_used,
             "simulation_time": round(_t.time() - start, 2),
             "final_state": {
-                "turn": summary["turn"],
-                "total_guesses": summary["total_guesses"],
-                "remaining_answers": summary["remaining_answers"],
-                "is_solved": summary["is_solved"],
-                "is_failed": summary["is_failed"],
-                "remaining_turns": summary["remaining_turns"],
-                "guesses": summary["guesses"],
-                "possible_answers": summary["possible_answers"],
+                "turn": game_manager.get_current_state().turn,
+                "total_guesses": len(game_manager.get_current_state().guesses),
+                "remaining_answers": len(game_manager.get_possible_answers()),
+                "is_solved": solved,
+                "is_failed": game_manager.is_failed(),
+                "remaining_turns": game_manager.get_current_state().remaining_turns,
+                "guesses": game_manager.get_game_summary()["guesses"],
+                "possible_answers": game_manager.get_possible_answers(),
             },
         }
 
@@ -473,3 +779,169 @@ class Orchestrator:
                 "possible_answers": summary["possible_answers"],
             },
         }
+
+    def run_online_benchmark(
+        self,
+        num_games: int = 100,
+        mode: str = "random",
+        target_words: list[str] | None = None,
+        show_progress: bool = True,
+    ) -> dict[str, Any]:
+        """Run benchmark using online APIs.
+
+        Args:
+            num_games: Number of games to play
+            mode: API mode - "daily", "random", or "word"
+            target_words: Specific words for "word" mode (if None, random selection)
+            show_progress: Whether to show progress updates
+
+        Returns:
+            Benchmark results with online API data
+        """
+        from core.use_cases.benchmark_engine import BenchmarkEngine
+
+        self.logger.info(
+            f"Starting online benchmark with {num_games} games using {mode} API"
+        )
+
+        # Create benchmark engine with online orchestrator
+        benchmark = BenchmarkEngine(
+            solver_time_budget=self.settings.SOLVER_TIME_BUDGET_SECONDS, max_workers=4
+        )
+
+        # Override the benchmark's game playing logic to use online APIs
+        def online_play_game(target_word: str) -> dict[str, Any]:
+            """Play a single game using online API."""
+            try:
+                if mode == "daily":
+                    result = self.solve_daily_puzzle()
+                elif mode == "random":
+                    result = self.play_random_game()
+                elif mode == "word":
+                    result = self.play_word_target(target_word)
+                else:
+                    raise ValueError(f"Invalid mode: {mode}")
+
+                # Convert to benchmark format
+                return {
+                    "target_word": result.get("target_answer", "unknown"),
+                    "won": result.get("solved", False),
+                    "guesses_used": result.get("turns_used", 0),
+                    "guesses": [],  # Empty for now, could be populated from final_state
+                    "game_duration": result.get("simulation_time", 0.0),
+                    "final_state": result.get("final_state", {}),
+                    "success": result.get("solved", False),
+                }
+            except Exception as e:
+                self.logger.error(f"Error in online game: {e}")
+                return {
+                    "target_word": target_word,
+                    "won": False,
+                    "guesses_used": 6,
+                    "guesses": [],
+                    "game_duration": 0.0,
+                    "final_state": {},
+                    "success": False,
+                    "error": str(e),
+                }
+
+        # Replace the game playing method
+        benchmark._play_single_game = online_play_game
+
+        # Run benchmark
+        if mode == "word" and target_words:
+            result = benchmark.run_benchmark(
+                num_games=len(target_words),
+                target_words=target_words,
+                show_progress=show_progress,
+            )
+        else:
+            result = benchmark.run_benchmark(
+                num_games=num_games,
+                target_words=target_words,
+                show_progress=show_progress,
+            )
+
+        # Add online-specific metadata
+        result["api_mode"] = mode
+        result["online_benchmark"] = True
+
+        return result
+
+    def run_online_analytics(
+        self,
+        analysis_type: str = "strategy",
+        sample_size: int = 50,
+        mode: str = "random",
+    ) -> dict[str, Any]:
+        """Run analytics using online APIs.
+
+        Args:
+            analysis_type: Type of analysis - "strategy", "difficulty", "patterns", "positions"
+            sample_size: Number of games to sample for analysis
+            mode: API mode - "daily", "random", or "word"
+
+        Returns:
+            Analytics results with online API data
+        """
+        from core.use_cases.analytics_engine import AnalyticsEngine
+
+        self.logger.info(
+            f"Running online {analysis_type} analysis with {sample_size} samples using {mode} API"
+        )
+
+        # Create analytics engine
+        analytics = AnalyticsEngine()
+
+        # For online analytics, we need to collect data from actual API games
+        if analysis_type == "difficulty":
+            # Run sample games to collect difficulty data
+            sample_results = []
+            for i in range(min(sample_size, 20)):  # Limit to avoid too many API calls
+                try:
+                    if mode == "daily":
+                        result = self.solve_daily_puzzle()
+                    elif mode == "random":
+                        result = self.play_random_game()
+                    else:
+                        # For word mode, use random words from lexicon
+                        word: str = self.lexicon.get_random_answer()
+                        result = self.play_word_target(word)
+
+                    sample_results.append(
+                        {
+                            "target_word": result.get("target_answer", "unknown"),
+                            "solved": result.get("solved", False),
+                            "turns_used": result.get("turns_used", 0),
+                            "simulation_time": result.get("simulation_time", 0.0),
+                        }
+                    )
+                except Exception as e:
+                    self.logger.warning(f"Failed to collect sample {i}: {e}")
+                    continue
+
+            # Analyze the collected data
+            result = {
+                "analysis_type": "online_word_difficulty",
+                "api_mode": mode,
+                "sample_size": len(sample_results),
+                "results": analytics.analyze_word_difficulty_from_results(
+                    sample_results
+                ),
+            }
+        else:
+            # For other analysis types, use the existing methods but mark as online
+            if analysis_type == "patterns":
+                analysis_result = analytics.analyze_feedback_patterns()
+            elif analysis_type == "positions":
+                analysis_result = analytics.analyze_position_patterns()
+            else:  # strategy
+                analysis_result = analytics.generate_strategy_insights()
+
+            result = {
+                "analysis_type": f"online_{analysis_type}",
+                "api_mode": mode,
+                "results": analysis_result,
+            }
+
+        return result

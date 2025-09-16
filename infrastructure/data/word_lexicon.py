@@ -1,5 +1,6 @@
 """Word Lexicon module for loading and managing Wordle word lists."""
 
+import random
 from pathlib import Path
 
 
@@ -84,6 +85,14 @@ class WordLexicon:
     def is_valid_guess(self, word: str) -> bool:
         """Check if word is a valid guess."""
         return word.upper() in self._allowed_set
+
+    def get_random_answer(self) -> str:
+        """Get a random answer word."""
+        return random.choice(self._answers)
+
+    def get_all_answers(self) -> list[str]:
+        """Get all possible answer words."""
+        return self._answers.copy()
 
     def get_stats(self) -> dict[str, int]:
         """Get statistics about loaded word lists."""

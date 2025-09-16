@@ -73,6 +73,10 @@ def main() -> int:
                 logger.error("Target answer required for play-word")
                 return 1
             result = orchestrator.play_word_target(args.target)
+        elif args.command == "online-benchmark":
+            result = run_online_benchmark(orchestrator, args)
+        elif args.command == "online-analytics":
+            result = run_online_analytics(orchestrator, args)
         else:
             logger.error(f"Unknown command: {args.command}")
             return 1
@@ -114,6 +118,12 @@ Examples:
   python main.py benchmark --stress      # Stress test with difficult words
   python main.py analytics --analysis-type strategy  # Strategic insights
   python main.py analytics --analysis-type difficulty --sample-size 10  # Word difficulty analysis
+
+  # Online API modes
+  python main.py play-random             # Play random game via API
+  python main.py play-word --target CRANE # Play specific word via API
+  python main.py online-benchmark --api-mode random --games 20  # Online benchmark
+  python main.py online-analytics --api-mode daily --analysis-type difficulty  # Online analytics
         """,
     )
 
@@ -127,6 +137,8 @@ Examples:
             "analytics",
             "play-random",
             "play-word",
+            "online-benchmark",
+            "online-analytics",
         ],
         help="Command to execute",
     )
@@ -196,6 +208,20 @@ Examples:
         type=int,
         default=20,
         help="Sample size for analysis (default: 20)",
+    )
+
+    # Online mode arguments
+    parser.add_argument(
+        "--api-mode",
+        choices=["daily", "random", "word"],
+        default="random",
+        help="API mode for online commands (default: random)",
+    )
+
+    parser.add_argument(
+        "--target-words",
+        nargs="+",
+        help="Specific target words for word mode (space-separated)",
     )
 
     parser.add_argument("--version", action="version", version="Wordle Bot 1.0.0")
@@ -347,6 +373,71 @@ def run_analytics(orchestrator: Orchestrator, args) -> Mapping[str, Any]:
             "analysis_type": "strategy_insights",
             "results": analytics.generate_strategy_insights(),
         }
+
+    return result
+
+
+def run_online_benchmark(orchestrator: Orchestrator, args) -> Mapping[str, Any]:
+    """Run online benchmark tests.
+
+    Args:
+        orchestrator: The orchestrator instance
+        args: Parsed command line arguments
+
+    Returns:
+        Benchmark results from online APIs
+    """
+    logger = get_logger(__name__)
+
+    # Get API mode and target words
+    api_mode = getattr(args, "api_mode", "random")
+    target_words = getattr(args, "target_words", None)
+
+    # Run appropriate benchmark based on flags
+    if args.quick:
+        logger.info(f"Running quick online benchmark using {api_mode} API...")
+        num_games = 20
+    elif args.stress:
+        logger.info(f"Running stress test using {api_mode} API...")
+        num_games = 50
+    else:
+        num_games = args.games
+        logger.info(
+            f"Running online benchmark with {num_games} games using {api_mode} API..."
+        )
+
+    result = orchestrator.run_online_benchmark(
+        num_games=num_games,
+        mode=api_mode,
+        target_words=target_words,
+        show_progress=True,
+    )
+
+    return result
+
+
+def run_online_analytics(orchestrator: Orchestrator, args) -> Mapping[str, Any]:
+    """Run online analytics.
+
+    Args:
+        orchestrator: The orchestrator instance
+        args: Parsed command line arguments
+
+    Returns:
+        Analytics results from online APIs
+    """
+    logger = get_logger(__name__)
+
+    # Get API mode and analysis parameters
+    api_mode = getattr(args, "api_mode", "random")
+    analysis_type = getattr(args, "analysis_type", "strategy")
+    sample_size = getattr(args, "sample_size", 20)
+
+    logger.info(f"Running online {analysis_type} analysis using {api_mode} API...")
+
+    result = orchestrator.run_online_analytics(
+        analysis_type=analysis_type, sample_size=sample_size, mode=api_mode
+    )
 
     return result
 

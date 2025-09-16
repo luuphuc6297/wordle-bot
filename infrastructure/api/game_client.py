@@ -52,7 +52,7 @@ class GameClient:
         retry=retry_if_exception_type((requests.RequestException, WordleAPIError)),
     )
     def submit_guess(self, guess: str) -> GuessResult:
-        """Submit a guess to the Wordle API.
+        """Submit a guess to the Daily Wordle API.
 
         Args:
             guess: The 5-letter word to guess
@@ -70,7 +70,8 @@ class GameClient:
         guess = guess.upper()
 
         try:
-            # According to API behavior, submit guess via GET /daily?guess=WORD
+            # Daily API: GET /daily?guess=WORD
+            # Returns array of slot results for the same target word
             response = self.session.get(
                 f"{self.base_url}/daily", params={"guess": guess}, timeout=self.timeout
             )
@@ -79,17 +80,19 @@ class GameClient:
 
             data = response.json()
 
-            # Daily API returns array of slots, same as random/word APIs
+            # Daily API returns array of slots, convert to pattern string
             pattern = self._slots_to_pattern(data)
             guess_result = GuessResult.from_api_response(guess, pattern)
 
             return guess_result
 
         except requests.RequestException as e:
-            raise WordleAPIError(f"Failed to submit guess '{guess}': {str(e)}") from e
+            raise WordleAPIError(
+                f"Failed to submit daily guess '{guess}': {str(e)}"
+            ) from e
         except (KeyError, ValueError) as e:
             raise WordleAPIError(
-                f"Invalid API response for guess '{guess}': {str(e)}"
+                f"Invalid API response for daily guess '{guess}': {str(e)}"
             ) from e
 
     @retry(
@@ -100,12 +103,25 @@ class GameClient:
     def submit_random_guess(self, guess: str) -> GuessResult:
         """Submit a guess in random mode via GET /random?guess=WORD.
 
-        API returns an array of slot results; we convert it to pattern string.
+        WARNING: Random API returns a DIFFERENT target word for each call!
+        This means each guess is against a new random word, not a consistent game.
+
+        Args:
+            guess: The 5-letter word to guess
+
+        Returns:
+            GuessResult with feedback from the API
+
+        Raises:
+            WordleAPIError: If the API request fails
+            ValueError: If the guess is invalid
         """
         if not guess or len(guess) != 5:
             raise ValueError(f"Guess must be exactly 5 letters, got: '{guess}'")
         guess = guess.upper()
         try:
+            # Random API: GET /random?guess=WORD
+            # WARNING: Each call returns a DIFFERENT target word!
             response = self.session.get(
                 f"{self.base_url}/random", params={"guess": guess}, timeout=self.timeout
             )

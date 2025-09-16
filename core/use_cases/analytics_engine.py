@@ -4,7 +4,7 @@ import statistics
 from collections import defaultdict
 from dataclasses import dataclass
 from logging import Logger
-from typing import TypedDict
+from typing import Any, TypedDict
 
 import numpy as np
 
@@ -456,3 +456,73 @@ class AnalyticsEngine:
         )
 
         return recommendations
+
+    def analyze_word_difficulty_from_results(
+        self, game_results: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Analyze word difficulty from actual game results.
+
+        Args:
+            game_results: List of game results with target_word, solved, turns_used, etc.
+
+        Returns:
+            List of word difficulty analysis results
+        """
+        # Group results by target word
+        word_stats: dict[str, dict[str, Any]] = {}
+
+        for result in game_results:
+            target_word = result.get("target_word", "unknown")
+            if target_word not in word_stats:
+                word_stats[target_word] = {
+                    "word": target_word,
+                    "games_played": 0,
+                    "games_solved": 0,
+                    "total_turns": 0,
+                    "total_time": 0.0,
+                    "turn_counts": [],
+                }
+
+            stats = word_stats[target_word]
+            stats["games_played"] += 1
+            if result.get("solved", False):
+                stats["games_solved"] += 1
+            stats["total_turns"] += result.get("turns_used", 0)
+            stats["total_time"] += result.get("simulation_time", 0.0)
+            stats["turn_counts"].append(result.get("turns_used", 0))
+
+        # Calculate difficulty metrics
+        difficulty_results = []
+        for word, stats in word_stats.items():
+            if stats["games_played"] == 0:
+                continue
+
+            success_rate = stats["games_solved"] / stats["games_played"]
+            avg_turns = stats["total_turns"] / stats["games_played"]
+            avg_time = stats["total_time"] / stats["games_played"]
+
+            # Calculate difficulty score (higher = more difficult)
+            # Based on success rate, average turns, and consistency
+            turn_variance = (
+                np.var(stats["turn_counts"]) if len(stats["turn_counts"]) > 1 else 0
+            )
+            difficulty_score = (
+                (1 - success_rate) * 10 + avg_turns + (turn_variance * 0.1)
+            )
+
+            difficulty_results.append(
+                {
+                    "word": word,
+                    "difficulty_score": round(difficulty_score, 2),
+                    "success_rate": round(success_rate, 3),
+                    "avg_turns": round(avg_turns, 2),
+                    "avg_time": round(avg_time, 2),
+                    "games_played": stats["games_played"],
+                    "turn_variance": round(turn_variance, 2),
+                }
+            )
+
+        # Sort by difficulty (highest first)
+        difficulty_results.sort(key=lambda x: x["difficulty_score"], reverse=True)
+
+        return difficulty_results
