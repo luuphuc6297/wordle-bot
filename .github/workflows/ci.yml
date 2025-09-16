@@ -14,6 +14,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v3
+
     - name: Set up Python 3.11
       uses: actions/setup-python@v4
       with:
@@ -30,9 +33,9 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest tests/ -v
+        uv run pytest tests/ -v
 
     - name: Test CLI
       run: |
-        python main.py --help
-        python main.py simulate --target ABOUT --no-display
+        uv run python main.py --help
+        uv run python main.py simulate --target ABOUT --no-display
