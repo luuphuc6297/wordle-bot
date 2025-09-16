@@ -186,6 +186,18 @@ class SolverEngine:
 
         return "".join(feedback)
 
+    def simulate_feedback(self, guess: str, answer: str) -> str:
+        """Public wrapper to simulate Wordle feedback pattern.
+
+        Args:
+            guess: The guessed 5-letter word
+            answer: The target 5-letter answer
+
+        Returns:
+            Pattern string such as "++o--".
+        """
+        return self._simulate_feedback(guess=guess, answer=answer)
+
     def calculate_detailed_entropy(
         self, guess_word: str, possible_answers: list[str]
     ) -> EntropyCalculation:
