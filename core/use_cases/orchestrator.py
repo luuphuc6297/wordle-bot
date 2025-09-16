@@ -4,12 +4,15 @@ import logging
 import time
 from typing import Any, TypedDict
 
+from config.settings import Settings
+from config.settings import settings as default_settings
 from core.domain.models import EntropyCalculation
 from core.use_cases.game_state_manager import GameStateManager, GameSummaryDict
 from core.use_cases.solver_engine import SolverEngine
 from infrastructure.api.game_client import GameClient, WordleAPIError
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay
+from utils.logging_config import get_logger
 
 
 class GameResult(TypedDict):
@@ -72,6 +75,7 @@ class Orchestrator:
         solver_time_budget: float = 5.0,
         show_rich_display: bool = True,
         show_detailed: bool = True,
+        app_settings: Settings | None = None,
     ) -> None:
         """Initialize the orchestrator.
 
@@ -81,13 +85,15 @@ class Orchestrator:
             show_rich_display: Whether to show rich console display
             show_detailed: Whether to show detailed entropy information
         """
-        self.logger: logging.Logger = logging.getLogger(name=__name__)
+        self.logger: logging.Logger = get_logger(__name__)
 
         # Initialize components
+        self.settings: Settings = app_settings or default_settings
         self.lexicon: WordLexicon = WordLexicon()
         self.game_client: GameClient = GameClient(base_url=api_base_url)
         self.solver_engine: SolverEngine = SolverEngine(
-            time_budget_seconds=solver_time_budget
+            time_budget_seconds=solver_time_budget,
+            app_settings=self.settings,
         )
         self.game_state_manager: GameStateManager | None = None
 
@@ -332,7 +338,7 @@ class Orchestrator:
                 )
 
             # Simulate feedback
-            feedback_pattern: str = self.solver_engine.simulate_feedback(
+            feedback_pattern: str = self.solver_engine._simulate_feedback(
                 guess, answer=target_answer
             )
 

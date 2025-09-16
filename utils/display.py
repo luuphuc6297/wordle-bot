@@ -106,8 +106,7 @@ class GameDisplay:
         )
         print(f"[INFO] {timestamp} - Remaining possible words: {remaining_count}")
 
-        if guess_result.is_correct:
-            self.show_victory(len([g for g in [guess_result] if not g.is_correct]) + 1)
+        # Victory display should be controlled by caller with accurate total guesses
 
     def show_victory(self, total_guesses: int):
         """Display victory message.

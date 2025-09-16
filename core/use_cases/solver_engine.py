@@ -8,6 +8,8 @@ from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 
 import numpy as np
 
+from config.settings import Settings
+from config.settings import settings as default_settings
 from core.domain.models import EntropyCalculation
 from infrastructure.data.word_lexicon import WordLexicon
 
@@ -15,10 +17,13 @@ from infrastructure.data.word_lexicon import WordLexicon
 class SolverEngine:
     """Core solver using information-theoretic approach with entropy maximization."""
 
-    OPTIMAL_FIRST_GUESS: str = "SALET"  # Pre-computed optimal first guess
+    OPTIMAL_FIRST_GUESS: str = "SALET"  # Default, can be overridden by settings
 
     def __init__(
-        self, time_budget_seconds: float = 5.0, max_workers: int | None = None
+        self,
+        time_budget_seconds: float = 5.0,
+        max_workers: int | None = None,
+        app_settings: Settings | None = None,
     ) -> None:
         """Initialize the solver engine.
 
@@ -26,8 +31,16 @@ class SolverEngine:
             time_budget_seconds: Maximum time allowed for guess calculation
             max_workers: Number of threads for parallel computation (None = auto)
         """
+        self.settings: Settings = app_settings or default_settings
         self.time_budget: float = time_budget_seconds
-        self.max_workers: int = max_workers or min(8, (os.cpu_count() or 1) + 4)
+        self.max_workers: int = (
+            max_workers
+            if max_workers is not None
+            else (self.settings.SOLVER_MAX_WORKERS or min(8, (os.cpu_count() or 1) + 4))
+        )
+        # Override optimal first guess from settings if provided
+        if self.settings.OPTIMAL_FIRST_GUESS:
+            self.OPTIMAL_FIRST_GUESS = self.settings.OPTIMAL_FIRST_GUESS.upper()
         self.lexicon: WordLexicon = WordLexicon()
 
         # Convert to numpy arrays for better performance
@@ -172,18 +185,6 @@ class SolverEngine:
                     answer_letter_counts[letter] -= 1
 
         return "".join(feedback)
-
-    def simulate_feedback(self, guess: str, answer: str) -> str:
-        """Public method to simulate Wordle feedback for a guess against an answer.
-
-        Args:
-            guess: The guessed word
-            answer: The actual answer word
-
-        Returns:
-            Feedback pattern string (e.g., "++o--")
-        """
-        return self._simulate_feedback(guess, answer)
 
     def calculate_detailed_entropy(
         self, guess_word: str, possible_answers: list[str]

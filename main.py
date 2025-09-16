@@ -3,8 +3,10 @@
 import argparse
 import json
 import sys
+from collections.abc import Mapping
+from typing import Any
 
-from config.settings import settings
+from config.settings import Settings, settings
 from core.use_cases.analytics_engine import AnalyticsEngine
 from core.use_cases.benchmark_engine import BenchmarkEngine
 from core.use_cases.orchestrator import Orchestrator
@@ -17,19 +19,32 @@ def main() -> int:
     Returns:
         Exit code (0 for success, 1 for failure)
     """
-    # Setup logging first
-    setup_logging()
+    # Setup logging with default settings first
+    setup_logging(settings)
     logger = get_logger(__name__)
 
     try:
         # Parse command line arguments
         args = parse_arguments()
 
+        # Build runtime settings overrides from CLI flags (immutable)
+        overrides: dict[str, object] = {}
+        if args.time_budget:
+            overrides["SOLVER_TIME_BUDGET_SECONDS"] = args.time_budget
+        if args.verbose:
+            overrides["LOG_LEVEL"] = "DEBUG"
+
+        runtime_settings = Settings.from_env(overrides=overrides)
+
+        # Reconfigure logging if level changed
+        if args.verbose:
+            setup_logging(runtime_settings)
+
         # Initialize orchestrator
         logger.info("Initializing Wordle Bot...")
         orchestrator = Orchestrator(
-            api_base_url=settings.WORDLE_API_BASE_URL,
-            solver_time_budget=settings.SOLVER_TIME_BUDGET_SECONDS,
+            api_base_url=runtime_settings.WORDLE_API_BASE_URL,
+            solver_time_budget=runtime_settings.SOLVER_TIME_BUDGET_SECONDS,
             show_rich_display=not args.no_display,
             show_detailed=args.verbose,
         )
@@ -171,19 +186,10 @@ Examples:
     parser.add_argument("--version", action="version", version="Wordle Bot 1.0.0")
 
     args = parser.parse_args()
-
-    # Update settings based on arguments
-    if args.time_budget:
-        settings.SOLVER_TIME_BUDGET_SECONDS = args.time_budget
-
-    if args.verbose:
-        settings.LOG_LEVEL = "DEBUG"
-        setup_logging()  # Reconfigure with new level
-
     return args
 
 
-def solve_daily_puzzle(orchestrator: Orchestrator) -> dict:
+def solve_daily_puzzle(orchestrator: Orchestrator) -> Mapping[str, Any]:
     """Solve the daily Wordle puzzle.
 
     Args:
@@ -200,7 +206,7 @@ def solve_daily_puzzle(orchestrator: Orchestrator) -> dict:
     return result
 
 
-def simulate_game(orchestrator: Orchestrator, target_answer: str) -> dict:
+def simulate_game(orchestrator: Orchestrator, target_answer: str) -> Mapping[str, Any]:
     """Simulate solving a game with known target.
 
     Args:
@@ -220,7 +226,7 @@ def simulate_game(orchestrator: Orchestrator, target_answer: str) -> dict:
 
 def analyze_guess(
     orchestrator: Orchestrator, word: str, answers_file: str | None = None
-) -> dict:
+) -> Mapping[str, Any]:
     """Analyze the entropy of a specific guess.
 
     Args:
@@ -253,7 +259,7 @@ def analyze_guess(
     return result
 
 
-def run_benchmark(orchestrator: Orchestrator, args) -> dict:
+def run_benchmark(orchestrator: Orchestrator, args) -> dict[str, Any]:
     """Run benchmark tests.
 
     Args:
@@ -289,7 +295,7 @@ def run_benchmark(orchestrator: Orchestrator, args) -> dict:
     return result
 
 
-def run_analytics(orchestrator: Orchestrator, args) -> dict:
+def run_analytics(orchestrator: Orchestrator, args) -> Mapping[str, Any]:
     """Run advanced analytics.
 
     Args:
@@ -330,7 +336,7 @@ def run_analytics(orchestrator: Orchestrator, args) -> dict:
     return result
 
 
-def save_results_to_file(results: dict, output_file: str) -> None:
+def save_results_to_file(results: Mapping[str, Any], output_file: str) -> None:
     """Save results to a JSON file.
 
     Args:
@@ -344,7 +350,7 @@ def save_results_to_file(results: dict, output_file: str) -> None:
     print(f"Results saved to: {output_file}")
 
 
-def output_results(results: dict, output_format: str) -> None:
+def output_results(results: Mapping[str, Any], output_format: str) -> None:
     """Output results in the specified format.
 
     Args:

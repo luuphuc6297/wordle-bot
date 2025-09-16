@@ -1,21 +1,37 @@
-FROM python:3.11-slim
+FROM python:3.11-slim AS base
 
+ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Install uv package manager
 RUN pip install --no-cache-dir uv
 
 # Copy project metadata and lockfile first for better Docker layer caching
-# Include LICENSE/README because build backend validates these during editable build
 COPY pyproject.toml uv.lock LICENSE README.md ./
 
-# Sync dependencies exactly as locked, without dev extras
-RUN uv sync --frozen --no-dev
+
+FROM base AS development
+
+# Install dev dependencies
+RUN uv sync --frozen
 
 # Ensure the synced virtual environment is on PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Copy the rest of the source code
+# Copy source
+COPY . .
+
+ENTRYPOINT ["python", "main.py"]
+CMD ["--help"]
+
+
+FROM base AS production
+
+# Install only runtime deps
+RUN uv sync --frozen --no-dev
+
+ENV PATH="/app/.venv/bin:$PATH"
+
 COPY . .
 
 ENTRYPOINT ["python", "main.py"]
