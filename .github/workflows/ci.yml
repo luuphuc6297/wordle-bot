@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -24,12 +24,12 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv sync --all-extras
+        uv sync --all-extras --frozen
 
     - name: Run format check
       run: |
-        uv run ruff check . --diff
-        uv run ruff format . --check
+        uv run ruff format . --check --output-format=github
+        uv run ruff check . --diff --output-format=github
 
     - name: Run tests
       run: |

@@ -5,3 +5,14 @@ repos:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-json
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.5.0
+    hooks:
+      - id: uv-lock
