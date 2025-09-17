@@ -153,11 +153,7 @@ class Orchestrator:
                 "remaining_possibilities": remaining_answers,
             },
             "guess_history": guess_history,
-            "lexicon_stats": {
-                "total_answers": lexicon_stats["total_answers"],
-                "total_allowed_guesses": lexicon_stats["total_allowed_guesses"],
-                "answers_in_allowed": lexicon_stats["answers_in_allowed"],
-            },
+            "lexicon_stats": lexicon_stats,
             "timestamp": time.time(),
         }
 
@@ -294,11 +290,7 @@ class Orchestrator:
                 "remaining_possibilities": remaining_answers,
             },
             "guess_history": guess_history,
-            "lexicon_stats": {
-                "total_answers": lexicon_stats["total_answers"],
-                "total_allowed_guesses": lexicon_stats["total_allowed_guesses"],
-                "answers_in_allowed": lexicon_stats["answers_in_allowed"],
-            },
+            "lexicon_stats": lexicon_stats,
             "timestamp": time.time(),
         }
 

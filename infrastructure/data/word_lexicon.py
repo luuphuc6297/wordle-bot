@@ -3,6 +3,8 @@
 import random
 from pathlib import Path
 
+from core.domain.types import LexiconStats
+
 
 class WordLexicon:
     """Singleton class for managing Wordle word lists."""
@@ -94,7 +96,7 @@ class WordLexicon:
         """Get all possible answer words."""
         return self._answers.copy()
 
-    def get_stats(self) -> dict[str, int]:
+    def get_stats(self) -> LexiconStats:
         """Get statistics about loaded word lists."""
         return {
             "total_answers": len(self._answers),
