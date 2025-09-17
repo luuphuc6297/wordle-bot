@@ -140,33 +140,84 @@ The project follows **Clean Architecture** principles with a modular structure:
 
 ```
 wordle_bot/
-├── core/
+├── main.py                   # Main entry point
+├── pyproject.toml            # Project configuration
+├── pyrightconfig.json        # Type checking configuration
+├── uv.lock                   # Dependency lock file
+├── docker-compose.yml        # Docker orchestration
+├── Dockerfile                # Container definition
+├── .pre-commit-config.yaml   # Pre-commit hooks
+├── LICENSE                   # MIT License
+├── README.md                 # This documentation
+│
+├── config/                   # Application configuration
+│   ├── __init__.py
+│   └── settings.py           # Settings and environment variables
+│
+├── core/                     # Core business logic
+│   ├── __init__.py
+│   │
 │   ├── algorithms/           # Core algorithms and engines
-│   │   ├── orchestrator/     # Main orchestrator with mode handlers
-│   │   │   └── modes/        # Game mode handlers (daily, random, word, offline)
-│   │   ├── state_manager/    # Game state management
-│   │   │   ├── base.py       # Base game state manager
-│   │   │   ├── daily.py      # Daily-specific state manager
-│   │   │   └── strategies.py # Filtering strategies
-│   │   ├── analytics_engine.py
-│   │   ├── benchmark_engine.py
-│   │   ├── solver_engine.py
-│   │   └── dependency_container.py
+│   │   ├── __init__.py
+│   │   ├── analytics_engine.py      # Advanced analytics
+│   │   ├── benchmark_engine.py      # Performance benchmarking
+│   │   ├── dependency_container.py  # Dependency injection
+│   │   ├── solver_engine.py         # Core entropy algorithm
+│   │   │
+│   │   ├── orchestrator/            # Main orchestrator
+│   │   │   ├── __init__.py
+│   │   │   ├── orchestrator.py      # Main coordinator
+│   │   │   └── modes/               # Game mode handlers
+│   │   │       ├── __init__.py
+│   │   │       ├── base_handler.py  # Abstract base handler
+│   │   │       ├── daily_handler.py # Daily puzzle handler
+│   │   │       ├── offline_handler.py # Offline simulation handler
+│   │   │       ├── random_handler.py # Random game handler
+│   │   │       └── word_handler.py   # Word target handler
+│   │   │
+│   │   └── state_manager/           # Game state management
+│   │       ├── __init__.py
+│   │       ├── base.py              # Base game state manager
+│   │       ├── daily.py             # Daily-specific state manager
+│   │       └── strategies.py        # Filtering strategies
+│   │
 │   ├── domain/               # Business entities and models
+│   │   ├── __init__.py
 │   │   ├── constants.py      # Application constants
 │   │   ├── models.py         # Domain models
-│   │   └── types.py          # Type definitions
+│   │   └── types.py          # Type definitions (TypedDict)
+│   │
 │   └── use_cases/            # Application business logic
+│       ├── __init__.py
 │       ├── daily.py          # Daily mode entry point
+│       ├── offline.py        # Offline simulation entry point
 │       ├── random.py         # Random mode entry point
-│       ├── word.py           # Word target mode entry point
-│       └── offline.py        # Offline simulation entry point
+│       └── word.py           # Word target mode entry point
+│
 ├── infrastructure/           # External interfaces
+│   ├── __init__.py
 │   ├── api/                  # Wordle API client
+│   │   ├── __init__.py
+│   │   └── game_client.py    # HTTP client with retry logic
 │   └── data/                 # Word list management
-├── config/                   # Application configuration
+│       ├── __init__.py
+│       ├── allowed.txt       # Allowed guess words
+│       ├── answers.txt       # Answer words
+│       └── word_lexicon.py   # Word list manager
+│
 ├── utils/                    # Shared utilities
-└── tests/                    # Comprehensive test suite
+│   ├── __init__.py
+│   ├── display.py            # Console display and formatting
+│   └── logging_config.py     # Logging configuration
+│
+├── tests/                    # Comprehensive test suite
+│   ├── __init__.py
+│   ├── test_models.py        # Domain model tests
+│   └── test_solver_engine.py # Solver algorithm tests
+│
+└── apps/                     # Application packages (legacy)
+    ├── api/                  # API package
+    └── cli/                  # CLI package
 ```
 
 ### Key Components
