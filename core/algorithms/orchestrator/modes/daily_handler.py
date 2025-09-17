@@ -12,7 +12,7 @@ from core.algorithms.state_manager import (
     DailyGameStateManager,
     GameStateManager,
 )
-from core.domain.types import GameSummary
+from core.domain.types import GameSummary, GuessHistoryItem
 from infrastructure.api.game_client import GameClient
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay
@@ -274,7 +274,7 @@ class DailyHandler(BaseGameHandler):
 
     def _generate_daily_final_summary(
         self, total_time: float, daily_game_manager: DailyGameStateManager
-    ) -> dict[str, Any]:
+    ) -> GameSummary:
         """Generate final game summary for Daily mode."""
         game_summary = daily_game_manager.get_game_summary()
 
@@ -282,7 +282,20 @@ class DailyHandler(BaseGameHandler):
         guesses: list[dict[str, str | bool]] = game_summary["guesses"]
         remaining_answers: list[str] = game_summary["possible_answers"]
 
-        final_summary: dict[str, Any] = {
+        # Convert guesses to proper GuessHistoryItem format
+        guess_history: list[GuessHistoryItem] = [
+            {
+                "guess": str(guess["guess"]),
+                "feedback": str(guess["feedback"]),
+                "correct": bool(guess["correct"]),
+            }
+            for guess in guesses
+        ]
+
+        # Get lexicon stats in proper format
+        lexicon_stats = self.lexicon.get_stats()
+
+        final_summary: GameSummary = {
             "game_result": {
                 "solved": daily_game_manager.is_solved(),
                 "failed": daily_game_manager.is_failed(),
@@ -296,8 +309,12 @@ class DailyHandler(BaseGameHandler):
                 ),
                 "remaining_possibilities": remaining_answers,
             },
-            "guess_history": guesses,
-            "lexicon_stats": self.lexicon.get_stats(),
+            "guess_history": guess_history,
+            "lexicon_stats": {
+                "total_answers": lexicon_stats["total_answers"],
+                "total_allowed_guesses": lexicon_stats["total_allowed_guesses"],
+                "answers_in_allowed": lexicon_stats["answers_in_allowed"],
+            },
             "timestamp": time.time(),
         }
 
@@ -316,7 +333,7 @@ class DailyHandler(BaseGameHandler):
 
         return final_summary
 
-    def _generate_final_summary(self, total_time: float) -> dict[str, Any]:
+    def _generate_final_summary(self, total_time: float) -> GameSummary:
         """Generate final game summary."""
         if not self.game_state_manager:
             raise RuntimeError("Game state manager is not initialized")
@@ -327,7 +344,20 @@ class DailyHandler(BaseGameHandler):
         guesses: list[dict[str, str | bool]] = game_summary["guesses"]
         remaining_answers: list[str] = game_summary["possible_answers"]
 
-        final_summary: dict[str, Any] = {
+        # Convert guesses to proper GuessHistoryItem format
+        guess_history: list[GuessHistoryItem] = [
+            {
+                "guess": str(guess["guess"]),
+                "feedback": str(guess["feedback"]),
+                "correct": bool(guess["correct"]),
+            }
+            for guess in guesses
+        ]
+
+        # Get lexicon stats in proper format
+        lexicon_stats = self.lexicon.get_stats()
+
+        final_summary: GameSummary = {
             "game_result": {
                 "solved": self.game_state_manager.is_solved(),
                 "failed": self.game_state_manager.is_failed(),
@@ -341,8 +371,12 @@ class DailyHandler(BaseGameHandler):
                 ),
                 "remaining_possibilities": remaining_answers,
             },
-            "guess_history": guesses,
-            "lexicon_stats": self.lexicon.get_stats(),
+            "guess_history": guess_history,
+            "lexicon_stats": {
+                "total_answers": lexicon_stats["total_answers"],
+                "total_allowed_guesses": lexicon_stats["total_allowed_guesses"],
+                "answers_in_allowed": lexicon_stats["answers_in_allowed"],
+            },
             "timestamp": time.time(),
         }
 

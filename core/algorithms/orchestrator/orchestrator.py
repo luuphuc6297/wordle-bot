@@ -11,7 +11,7 @@ from core.algorithms.state_manager import (
     DailyGameStateManager,
     GameStateManager,
 )
-from core.domain.types import GameSummary, SimulationResult
+from core.domain.types import GameSummary, GuessHistoryItem, SimulationResult
 from infrastructure.api.game_client import GameClient, WordleAPIError
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay
@@ -135,6 +135,19 @@ class Orchestrator:
         guesses: list[dict[str, str | bool]] = game_summary["guesses"]
         remaining_answers: list[str] = game_summary["possible_answers"]
 
+        # Convert guesses to proper GuessHistoryItem format
+        guess_history: list[GuessHistoryItem] = [
+            {
+                "guess": str(guess["guess"]),
+                "feedback": str(guess["feedback"]),
+                "correct": bool(guess["correct"]),
+            }
+            for guess in guesses
+        ]
+
+        # Get lexicon stats in proper format
+        lexicon_stats = self.lexicon.get_stats()
+
         final_summary: GameSummary = {
             "game_result": {
                 "solved": daily_game_manager.is_solved(),
@@ -149,8 +162,12 @@ class Orchestrator:
                 ),
                 "remaining_possibilities": remaining_answers,
             },
-            "guess_history": guesses,
-            "lexicon_stats": self.lexicon.get_stats(),
+            "guess_history": guess_history,
+            "lexicon_stats": {
+                "total_answers": lexicon_stats["total_answers"],
+                "total_allowed_guesses": lexicon_stats["total_allowed_guesses"],
+                "answers_in_allowed": lexicon_stats["answers_in_allowed"],
+            },
             "timestamp": time.time(),
         }
 
@@ -269,6 +286,19 @@ class Orchestrator:
         guesses: list[dict[str, str | bool]] = game_summary["guesses"]
         remaining_answers: list[str] = game_summary["possible_answers"]
 
+        # Convert guesses to proper GuessHistoryItem format
+        guess_history: list[GuessHistoryItem] = [
+            {
+                "guess": str(guess["guess"]),
+                "feedback": str(guess["feedback"]),
+                "correct": bool(guess["correct"]),
+            }
+            for guess in guesses
+        ]
+
+        # Get lexicon stats in proper format
+        lexicon_stats = self.lexicon.get_stats()
+
         final_summary: GameSummary = {
             "game_result": {
                 "solved": self.game_state_manager.is_solved(),
@@ -283,8 +313,12 @@ class Orchestrator:
                 ),
                 "remaining_possibilities": remaining_answers,
             },
-            "guess_history": guesses,
-            "lexicon_stats": self.lexicon.get_stats(),
+            "guess_history": guess_history,
+            "lexicon_stats": {
+                "total_answers": lexicon_stats["total_answers"],
+                "total_allowed_guesses": lexicon_stats["total_allowed_guesses"],
+                "answers_in_allowed": lexicon_stats["answers_in_allowed"],
+            },
             "timestamp": time.time(),
         }
 
