@@ -17,6 +17,7 @@ This bot leverages **Shannon entropy** to systematically narrow down the space o
 - **🧪 Extensive Testing**: Comprehensive test coverage, especially for edge cases
 - **🐳 Containerized**: Docker support for easy deployment
 - **📈 Analysis Tools**: Built-in tools for analyzing guess effectiveness and algorithm performance
+- **🌐 Online & Offline Modes**: Support for both API-based and simulation-based gameplay
 
 ## 🚀 Quick Start
 
@@ -39,24 +40,62 @@ pip install -r requirements.txt
 python main.py --version
 ```
 
-### Basic Usage
+## 🎮 Game Modes
 
-#### Solve Daily Puzzle
+### Online Modes (Real API)
+These modes interact with the actual Wordle API:
+
+#### Daily Puzzle Mode
 ```bash
+# Solve today's daily puzzle
 python main.py solve
+
+# With verbose output
+python main.py solve --verbose --output-format json
 ```
 
-#### Simulate with Known Answer (Rich Display)
+#### Random Game Mode
 ```bash
-python main.py simulate --target CRANE --verbose
+# Play a random game via API
+python main.py play-random
+
+# With custom time budget
+python main.py play-random --time-budget 10.0 --verbose
 ```
 
-#### Analyze Word Entropy
+#### Word Target Mode
 ```bash
-python main.py analyze BRAIN
+# Play against a specific word
+python main.py play-word --target CRANE
+
+# Play against multiple words
+python main.py play-word --target CRANE AUDIO ZEBRA
 ```
 
-#### Run Performance Benchmarks
+### Offline Modes (Simulation)
+These modes run locally without API calls:
+
+#### Simulation Mode
+```bash
+# Simulate solving with known answer
+python main.py simulate --target CRANE
+
+# With verbose output and JSON format
+python main.py simulate --target AUDIO --verbose --output-format json
+```
+
+#### Analysis Mode
+```bash
+# Analyze word entropy
+python main.py analyze CRANE
+
+# Analyze with custom word list
+python main.py analyze STARE --answers my_words.txt
+```
+
+## 📊 Benchmarking & Analytics
+
+### Offline Benchmarking
 ```bash
 # Quick test (20 games)
 python main.py benchmark --quick
@@ -66,49 +105,83 @@ python main.py benchmark --games 100
 
 # Stress test with difficult words
 python main.py benchmark --stress
+
+# Save results to file
+python main.py benchmark --games 50 --output results.json
 ```
 
-### Advanced Usage
-
-#### Custom Time Budget
+### Online Benchmarking
 ```bash
-python main.py solve --time-budget 10.0 --verbose
+# Random mode benchmark (3 games)
+python main.py online-benchmark --api-mode random --games 3
+
+# Daily mode benchmark (automatically limited to 1 game)
+python main.py online-benchmark --api-mode daily --games 10
+
+# Word mode benchmark with specific targets
+python main.py online-benchmark --api-mode word --target-words CRANE AUDIO ZEBRA
 ```
 
-#### JSON Output
+### Analytics
 ```bash
-python main.py solve --output-format json > results.json
-```
+# Strategy analysis
+python main.py analytics --analysis-type strategy
 
-#### Analyze Custom Word List
-```bash
-python main.py analyze STARE --answers my_words.txt
+# Word difficulty analysis
+python main.py analytics --analysis-type difficulty --sample-size 10
+
+# Online analytics with daily API
+python main.py online-analytics --api-mode daily --analysis-type difficulty
 ```
 
 ## 🏛️ Architecture
 
-The project follows **Clean Architecture** principles:
+The project follows **Clean Architecture** principles with a modular structure:
 
 ```
 wordle_bot/
 ├── core/
-│   ├── domain/          # Business entities and models
-│   └── use_cases/       # Application business logic
-├── infrastructure/      # External interfaces
-│   ├── api/            # Wordle API client
-│   └── data/           # Word list management
-├── config/             # Application configuration
-├── utils/              # Shared utilities
-└── tests/              # Comprehensive test suite
+│   ├── algorithms/           # Core algorithms and engines
+│   │   ├── orchestrator/     # Main orchestrator with mode handlers
+│   │   │   └── modes/        # Game mode handlers (daily, random, word, offline)
+│   │   ├── state_manager/    # Game state management
+│   │   │   ├── base.py       # Base game state manager
+│   │   │   ├── daily.py      # Daily-specific state manager
+│   │   │   └── strategies.py # Filtering strategies
+│   │   ├── analytics_engine.py
+│   │   ├── benchmark_engine.py
+│   │   ├── solver_engine.py
+│   │   └── dependency_container.py
+│   ├── domain/               # Business entities and models
+│   │   ├── constants.py      # Application constants
+│   │   ├── models.py         # Domain models
+│   │   └── types.py          # Type definitions
+│   └── use_cases/            # Application business logic
+│       ├── daily.py          # Daily mode entry point
+│       ├── random.py         # Random mode entry point
+│       ├── word.py           # Word target mode entry point
+│       └── offline.py        # Offline simulation entry point
+├── infrastructure/           # External interfaces
+│   ├── api/                  # Wordle API client
+│   └── data/                 # Word list management
+├── config/                   # Application configuration
+├── utils/                    # Shared utilities
+└── tests/                    # Comprehensive test suite
 ```
 
 ### Key Components
 
+- **Orchestrator**: Main coordinator with mode-specific handlers
+- **Mode Handlers**: Specialized handlers for each game mode
+  - `DailyHandler`: Handles daily puzzle solving
+  - `RandomHandler`: Handles random game playing
+  - `WordHandler`: Handles word target games
+  - `OfflineHandler`: Handles offline simulations
+- **State Managers**: Game state management with filtering strategies
 - **SolverEngine**: Core entropy-maximization algorithm
-- **GameStateManager**: Tracks game state and filters possibilities
 - **GameClient**: API adapter with retry logic and error handling
-- **Orchestrator**: Coordinates the complete solving process
 - **WordLexicon**: Singleton for managing word lists
+- **DependencyContainer**: Manages and injects dependencies
 
 ## 🧮 Algorithm Details
 
@@ -125,7 +198,7 @@ Where `p(i)` is the probability of each possible feedback pattern.
 ### Optimization Strategies
 
 1. **Pre-computed First Guess**: SALET is optimal for minimizing average guesses
-2. **Time-budgeted Calculation**: Respects strict time constraints per turn  
+2. **Time-budgeted Calculation**: Respects strict time constraints per turn
 3. **Parallel Processing**: NumPy + Threading for maximum performance on macOS
 4. **Smart Fallbacks**: Graceful degradation when time budget is exceeded
 
@@ -203,15 +276,33 @@ Configure via environment variables:
 ## 📊 Performance Metrics
 
 ### Typical Performance
-- **Average Turns**: ~3.5 
+- **Average Turns**: ~3.5
 - **Success Rate**: >99%
 - **Time per Turn**: 2-5 seconds
 - **First Guess**: SALET (pre-computed)
 
 ### Entropy Examples
 - **SALET** (first guess): ~5.89 bits
-- **STARE**: ~5.83 bits  
+- **STARE**: ~5.83 bits
 - **CRANE**: ~5.70 bits
+
+### Benchmark Results Format
+
+The bot provides detailed benchmark results with clear distribution:
+
+```json
+{
+  "games_played": 3,
+  "games_won": 3,
+  "win_rate": 100.0,
+  "avg_guesses": 3.67,
+  "distribution": {
+    "3_guesses": 1,    // 1 game solved in 3 guesses
+    "4_guesses": 2,    // 2 games solved in 4 guesses
+    "losses": 0        // 0 games failed
+  }
+}
+```
 
 ## 🔬 Analysis Tools
 
@@ -241,10 +332,11 @@ python main.py simulate ZEBRA --verbose
 - **SOLID principles** adherence
 - **High reusability** focus
 - **Consistent naming** conventions
+- **Type safety** with comprehensive TypedDict definitions
 
 ### Adding New Features
 
-1. **Domain Changes**: Add to `core/domain/models.py`
+1. **Domain Changes**: Add to `core/domain/`
 2. **Business Logic**: Extend use cases in `core/use_cases/`
 3. **External Integrations**: Add to `infrastructure/`
 4. **Tests**: Add corresponding tests with edge cases
@@ -263,6 +355,7 @@ The bot includes robust error handling:
 - **Invalid Responses**: Graceful parsing with fallbacks
 - **Time Budget**: Hard limits prevent infinite calculations
 - **Data Validation**: Pydantic models ensure data integrity
+- **Type Safety**: Comprehensive type checking with pyright
 
 ## 📈 Monitoring
 
