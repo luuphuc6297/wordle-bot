@@ -142,7 +142,7 @@ class DailyHandler(BaseGameHandler):
         target_word: str,
         daily_game_manager: DailyGameStateManager,
         game_start_time: float,
-    ) -> dict[str, Any]:
+    ) -> GameSummary:
         """Continue solving using /word/{target}."""
         turn = 2
         max_turns = 6
@@ -200,7 +200,7 @@ class DailyHandler(BaseGameHandler):
         total_game_time = time.time() - game_start_time
         return self._generate_daily_final_summary(total_game_time, daily_game_manager)
 
-    def _solve_daily_original(self) -> dict[str, Any]:
+    def _solve_daily_original(self) -> GameSummary:
         """Original daily puzzle solving strategy as fallback."""
         self.logger.info("Using original daily solving strategy as fallback")
         game_start_time = time.time()

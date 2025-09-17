@@ -4,7 +4,6 @@ Handles the random API mode (/random) gameplay logic.
 """
 
 import time
-from typing import Any
 
 from config.settings import Settings
 from core.algorithms.solver_engine import SolverEngine
@@ -137,7 +136,7 @@ class RandomHandler:
 
     def _solve_target_word(
         self, target_word: str, game_manager: GameStateManager, start_time: float
-    ) -> dict[str, Any]:
+    ) -> SimulationResult:
         """Solve the target word using entropy algorithm."""
         turn = 2
         max_turns = 6
