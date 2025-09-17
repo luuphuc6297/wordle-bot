@@ -1,13 +1,14 @@
-"""GameStateManager - Manages game state and filters possible answers based on feedback."""
+"""Base game state manager with common functionality.
 
+This module contains the base game state manager that provides common
+functionality for all game state managers.
+"""
+
+from abc import ABC, abstractmethod
 from typing import TypedDict
 
 from config.settings import Settings
 from config.settings import settings as default_settings
-from core.algorithms.game_state_manager_strategy import (
-    FilterStrategy,
-    StandardFilterStrategy,
-)
 from core.algorithms.solver_engine import SolverEngine
 from core.domain.models import FeedbackType, GameState, GuessResult
 from infrastructure.data.word_lexicon import WordLexicon
@@ -26,24 +27,24 @@ class GameSummaryDict(TypedDict):
     possible_answers: list[str]
 
 
-class GameStateManager:
-    """Manages the current game state and filters possible answers."""
+class BaseGameStateManager(ABC):
+    """Base class for all game state managers with common functionality."""
 
     def __init__(
         self,
         initial_answers: list[str] | None = None,
         app_settings: Settings | None = None,
     ):
-        """Initialize game state manager.
+        """Initialize base game state manager.
 
         Args:
             initial_answers: Optional list of initial possible answers.
             If None, uses all possible answers from lexicon.
+            app_settings: Application settings
         """
         self.settings: Settings = app_settings or default_settings
         self.lexicon: WordLexicon = WordLexicon()
         self.solver: SolverEngine = SolverEngine(app_settings=self.settings)
-        self.filter_strategy: FilterStrategy = StandardFilterStrategy(self.solver)
 
         initial_possible_answers = initial_answers or self.lexicon.answers
 
@@ -54,21 +55,14 @@ class GameStateManager:
             is_failed=False,
         )
 
+    @abstractmethod
     def add_guess_result(self, guess_result: GuessResult) -> None:
         """Add a guess result and update possible answers.
 
         Args:
             guess_result: The result of the guess including feedback
         """
-        # Add guess to game state
-        self.game_state.add_guess(guess_result)
-
-        # If game is over, don't filter further
-        if self.game_state.is_game_over:
-            return
-
-        # Filter possible answers based on the new feedback
-        self._filter_possible_answers(guess_result)
+        pass
 
     def _filter_possible_answers(self, guess_result: GuessResult) -> None:
         """Filter possible answers based on guess feedback.
@@ -187,3 +181,40 @@ class GameStateManager:
             is_solved=False,
             is_failed=False,
         )
+
+
+class GameStateManager(BaseGameStateManager):
+    """Standard game state manager for offline/word modes."""
+
+    def __init__(
+        self,
+        initial_answers: list[str] | None = None,
+        app_settings: Settings | None = None,
+    ):
+        """Initialize standard game state manager.
+
+        Args:
+            initial_answers: Optional list of initial possible answers.
+            If None, uses all possible answers from lexicon.
+            app_settings: Application settings
+        """
+        super().__init__(initial_answers, app_settings)
+        from .strategies import StandardFilterStrategy
+
+        self.filter_strategy = StandardFilterStrategy(self.solver)
+
+    def add_guess_result(self, guess_result: GuessResult) -> None:
+        """Add a guess result and update possible answers.
+
+        Args:
+            guess_result: The result of the guess including feedback
+        """
+        # Add guess to game state
+        self.game_state.add_guess(guess_result)
+
+        # If game is over, don't filter further
+        if self.game_state.is_game_over:
+            return
+
+        # Filter possible answers based on the new feedback
+        self._filter_possible_answers(guess_result)

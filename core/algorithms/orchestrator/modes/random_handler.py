@@ -7,8 +7,8 @@ import time
 from typing import Any
 
 from config.settings import Settings
-from core.algorithms.game_state_manager import GameStateManager
 from core.algorithms.solver_engine import SolverEngine
+from core.algorithms.state_manager import GameStateManager
 from infrastructure.api.game_client import GameClient
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay

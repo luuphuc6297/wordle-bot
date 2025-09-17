@@ -8,8 +8,8 @@ from typing import Any, TypedDict
 
 import numpy as np
 
-from core.algorithms.game_state_manager import GameStateManager
 from core.algorithms.solver_engine import SolverEngine
+from core.algorithms.state_manager import GameStateManager
 from core.domain.models import EntropyCalculation
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.logging_config import get_logger

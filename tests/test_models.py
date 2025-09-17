@@ -2,7 +2,7 @@
 
 import pytest
 
-from core.algorithms.game_state_manager import GameStateManager
+from core.algorithms.state_manager import GameStateManager
 from core.domain.models import EntropyCalculation, FeedbackType, GameState, GuessResult
 
 

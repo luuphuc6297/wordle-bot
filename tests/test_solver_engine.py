@@ -2,7 +2,7 @@
 
 import pytest
 
-from core.use_cases.solver_engine import SolverEngine
+from core.algorithms.solver_engine import SolverEngine
 
 
 class TestFeedbackSimulation:

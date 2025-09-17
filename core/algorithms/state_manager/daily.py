@@ -1,20 +1,17 @@
-"""Daily Game State Manager with improved filtering logic for Daily mode."""
+"""Daily game state manager with improved filtering logic for Daily mode."""
 
 from config.settings import Settings
 from config.settings import settings as default_settings
-from core.algorithms.game_state_manager import GameSummaryDict
-from core.algorithms.game_state_manager_strategy import (
-    DailyApiFilterStrategy,
-    FilterStrategy,
-)
-from core.algorithms.solver_engine import SolverEngine
 from core.domain.constants import WORD_LENGTH
 from core.domain.models import FeedbackType, GameState, GuessResult
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.logging_config import get_logger
 
+from .base import BaseGameStateManager, GameSummaryDict
+from .strategies import DailyApiFilterStrategy
 
-class DailyGameStateManager:
+
+class DailyGameStateManager(BaseGameStateManager):
     """Game state manager specifically for Daily mode with improved filtering logic."""
 
     def __init__(
@@ -31,8 +28,8 @@ class DailyGameStateManager:
         self.settings: Settings = app_settings or default_settings
         self.logger = get_logger(__name__)
         self.lexicon: WordLexicon = WordLexicon()
-        self.solver: SolverEngine = SolverEngine(app_settings=self.settings)
-        self.filter_strategy: FilterStrategy = DailyApiFilterStrategy()
+        self.solver = self._create_solver()
+        self.filter_strategy: DailyApiFilterStrategy = DailyApiFilterStrategy()
 
         # Initialize with all possible answers
         self._possible_answers: list[str] = (
@@ -42,6 +39,12 @@ class DailyGameStateManager:
             possible_answers=self._possible_answers.copy()
         )
         self._guess_history: list[GuessResult] = []
+
+    def _create_solver(self):
+        """Create solver engine for daily mode."""
+        from core.algorithms.solver_engine import SolverEngine
+
+        return SolverEngine(app_settings=self.settings)
 
     def add_guess_result(self, guess_result: GuessResult) -> None:
         """Add a guess result and update possible answers with improved filtering.
@@ -58,8 +61,6 @@ class DailyGameStateManager:
             candidates=self._possible_answers,
         )
         self._game_state.possible_answers = self._possible_answers.copy()
-
-    # Note: detailed per-letter filter is now part of DailyApiFilterStrategy
 
     def _is_answer_consistent_improved(
         self, guess_result: GuessResult, answer: str
@@ -152,14 +153,6 @@ class DailyGameStateManager:
             True if game is over
         """
         return self._game_state.is_solved or self._game_state.is_failed
-
-    def get_remaining_answers_count(self) -> int:
-        """Get the count of remaining possible answers.
-
-        Returns:
-            Number of remaining answers
-        """
-        return len(self._possible_answers)
 
     def get_game_summary(self) -> GameSummaryDict:
         """Get a summary of the current game state.

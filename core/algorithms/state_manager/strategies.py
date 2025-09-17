@@ -1,7 +1,7 @@
 """Filtering strategies for narrowing possible Wordle answers.
 
-This module defines a Strategy abstraction so different filtering rules can be
-plugged into GameState managers without duplicating structure.
+This module defines filtering strategies that can be plugged into
+GameState managers without duplicating structure.
 """
 
 from __future__ import annotations
