@@ -151,21 +151,17 @@ wordle_bot/
 ├── README.md                 # This documentation
 │
 ├── config/                   # Application configuration
-│   ├── __init__.py
 │   └── settings.py           # Settings and environment variables
 │
 ├── core/                     # Core business logic
-│   ├── __init__.py
 │   │
 │   ├── algorithms/           # Core algorithms and engines
-│   │   ├── __init__.py
 │   │   ├── analytics_engine.py      # Advanced analytics
 │   │   ├── benchmark_engine.py      # Performance benchmarking
 │   │   ├── dependency_container.py  # Dependency injection
 │   │   ├── solver_engine.py         # Core entropy algorithm
 │   │   │
 │   │   ├── orchestrator/            # Main orchestrator
-│   │   │   ├── __init__.py
 │   │   │   ├── orchestrator.py      # Main coordinator
 │   │   │   └── modes/               # Game mode handlers
 │   │   │       ├── __init__.py
@@ -176,13 +172,11 @@ wordle_bot/
 │   │   │       └── word_handler.py   # Word target handler
 │   │   │
 │   │   └── state_manager/           # Game state management
-│   │       ├── __init__.py
 │   │       ├── base.py              # Base game state manager
 │   │       ├── daily.py             # Daily-specific state manager
 │   │       └── strategies.py        # Filtering strategies
 │   │
 │   ├── domain/               # Business entities and models
-│   │   ├── __init__.py
 │   │   ├── constants.py      # Application constants
 │   │   ├── models.py         # Domain models
 │   │   └── types.py          # Type definitions (TypedDict)
@@ -195,9 +189,7 @@ wordle_bot/
 │       └── word.py           # Word target mode entry point
 │
 ├── infrastructure/           # External interfaces
-│   ├── __init__.py
 │   ├── api/                  # Wordle API client
-│   │   ├── __init__.py
 │   │   └── game_client.py    # HTTP client with retry logic
 │   └── data/                 # Word list management
 │       ├── __init__.py
@@ -206,18 +198,13 @@ wordle_bot/
 │       └── word_lexicon.py   # Word list manager
 │
 ├── utils/                    # Shared utilities
-│   ├── __init__.py
 │   ├── display.py            # Console display and formatting
 │   └── logging_config.py     # Logging configuration
 │
-├── tests/                    # Comprehensive test suite
-│   ├── __init__.py
-│   ├── test_models.py        # Domain model tests
-│   └── test_solver_engine.py # Solver algorithm tests
-│
-└── apps/                     # Application packages (legacy)
-    ├── api/                  # API package
-    └── cli/                  # CLI package
+└── tests/                    # Comprehensive test suite
+	   ├── __init__.py
+	   ├── test_models.py        # Domain model tests
+       └── test_solver_engine.py # Solver algorithm tests
 ```
 
 ### Key Components
