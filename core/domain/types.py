@@ -41,13 +41,16 @@ class GuessHistoryItem(TypedDict):
 
 
 class GameSummaryDict(TypedDict):
-    """Type definition for game summary dictionary."""
+    """Type definition for game summary dictionary from state manager."""
 
-    game_result: GameResult
-    performance_metrics: PerformanceMetrics
-    guess_history: list[GuessHistoryItem]
-    lexicon_stats: LexiconStats
-    timestamp: float
+    turn: int
+    total_guesses: int
+    remaining_answers: int
+    is_solved: bool
+    is_failed: bool
+    remaining_turns: int
+    guesses: list[GuessHistoryItem]
+    possible_answers: list[str]
 
 
 class SimulationResult(TypedDict):

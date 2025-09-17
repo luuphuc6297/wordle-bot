@@ -132,18 +132,8 @@ class Orchestrator:
         game_summary = daily_game_manager.get_game_summary()
 
         # Type-safe access to game_summary
-        guesses: list[dict[str, str | bool]] = game_summary["guesses"]
+        guess_history: list[GuessHistoryItem] = game_summary["guesses"]
         remaining_answers: list[str] = game_summary["possible_answers"]
-
-        # Convert guesses to proper GuessHistoryItem format
-        guess_history: list[GuessHistoryItem] = [
-            {
-                "guess": str(guess["guess"]),
-                "feedback": str(guess["feedback"]),
-                "correct": bool(guess["correct"]),
-            }
-            for guess in guesses
-        ]
 
         # Get lexicon stats in proper format
         lexicon_stats = self.lexicon.get_stats()
@@ -152,13 +142,13 @@ class Orchestrator:
             "game_result": {
                 "solved": daily_game_manager.is_solved(),
                 "failed": daily_game_manager.is_failed(),
-                "total_turns": len(guesses),
-                "final_answer": (str(guesses[-1]["guess"]) if guesses else None),
+                "total_turns": len(guess_history),
+                "final_answer": (guess_history[-1]["guess"] if guess_history else None),
             },
             "performance_metrics": {
                 "total_game_time_seconds": round(number=total_time, ndigits=2),
                 "average_time_per_turn": round(
-                    number=total_time / max(1, len(guesses)), ndigits=2
+                    number=total_time / max(1, len(guess_history)), ndigits=2
                 ),
                 "remaining_possibilities": remaining_answers,
             },
@@ -283,18 +273,8 @@ class Orchestrator:
         game_summary = self.game_state_manager.get_game_summary()
 
         # Type-safe access to game_summary
-        guesses: list[dict[str, str | bool]] = game_summary["guesses"]
+        guess_history: list[GuessHistoryItem] = game_summary["guesses"]
         remaining_answers: list[str] = game_summary["possible_answers"]
-
-        # Convert guesses to proper GuessHistoryItem format
-        guess_history: list[GuessHistoryItem] = [
-            {
-                "guess": str(guess["guess"]),
-                "feedback": str(guess["feedback"]),
-                "correct": bool(guess["correct"]),
-            }
-            for guess in guesses
-        ]
 
         # Get lexicon stats in proper format
         lexicon_stats = self.lexicon.get_stats()
@@ -303,13 +283,13 @@ class Orchestrator:
             "game_result": {
                 "solved": self.game_state_manager.is_solved(),
                 "failed": self.game_state_manager.is_failed(),
-                "total_turns": len(guesses),
-                "final_answer": (str(guesses[-1]["guess"]) if guesses else None),
+                "total_turns": len(guess_history),
+                "final_answer": (guess_history[-1]["guess"] if guess_history else None),
             },
             "performance_metrics": {
                 "total_game_time_seconds": round(number=total_time, ndigits=2),
                 "average_time_per_turn": round(
-                    number=total_time / max(1, len(guesses)), ndigits=2
+                    number=total_time / max(1, len(guess_history)), ndigits=2
                 ),
                 "remaining_possibilities": remaining_answers,
             },

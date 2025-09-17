@@ -10,7 +10,7 @@ from config.settings import Settings
 from config.settings import settings as default_settings
 from core.algorithms.solver_engine import SolverEngine
 from core.domain.models import FeedbackType, GameState, GuessResult
-from core.domain.types import GameSummaryDict
+from core.domain.types import GameSummaryDict, GuessHistoryItem
 from infrastructure.data.word_lexicon import WordLexicon
 
 
@@ -142,6 +142,16 @@ class BaseGameStateManager(ABC):
         Returns:
             Dictionary containing game summary information
         """
+        # Convert guesses to proper GuessHistoryItem format
+        guess_history: list[GuessHistoryItem] = [
+            {
+                "guess": guess.guess,
+                "feedback": guess.to_pattern_string(),
+                "correct": guess.is_correct,
+            }
+            for guess in self.game_state.guesses
+        ]
+
         return {
             "turn": self.game_state.turn,
             "total_guesses": len(self.game_state.guesses),
@@ -149,14 +159,7 @@ class BaseGameStateManager(ABC):
             "is_solved": self.game_state.is_solved,
             "is_failed": self.game_state.is_failed,
             "remaining_turns": self.game_state.remaining_turns,
-            "guesses": [
-                {
-                    "guess": guess.guess,
-                    "pattern": guess.to_pattern_string(),
-                    "is_correct": guess.is_correct,
-                }
-                for guess in self.game_state.guesses
-            ],
+            "guesses": guess_history,
             "possible_answers": self.game_state.possible_answers.copy(),
         }
 
