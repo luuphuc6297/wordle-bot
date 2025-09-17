@@ -5,26 +5,13 @@ functionality for all game state managers.
 """
 
 from abc import ABC, abstractmethod
-from typing import TypedDict
 
 from config.settings import Settings
 from config.settings import settings as default_settings
 from core.algorithms.solver_engine import SolverEngine
 from core.domain.models import FeedbackType, GameState, GuessResult
+from core.domain.types import GameSummaryDict
 from infrastructure.data.word_lexicon import WordLexicon
-
-
-class GameSummaryDict(TypedDict):
-    """Type definition for game summary dictionary."""
-
-    turn: int
-    total_guesses: int
-    remaining_answers: int
-    is_solved: bool
-    is_failed: bool
-    remaining_turns: int
-    guesses: list[dict[str, str | bool]]
-    possible_answers: list[str]
 
 
 class BaseGameStateManager(ABC):

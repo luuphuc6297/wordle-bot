@@ -11,15 +11,16 @@ from core.algorithms.solver_engine import SolverEngine
 from core.algorithms.state_manager import (
     DailyGameStateManager,
     GameStateManager,
-    GameSummaryDict,
 )
+from core.domain.types import GameSummary
 from infrastructure.api.game_client import GameClient
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay
-from utils.logging_config import get_logger
+
+from .base_handler import BaseGameHandler
 
 
-class DailyHandler:
+class DailyHandler(BaseGameHandler):
     """Handler for daily game mode."""
 
     def __init__(
@@ -30,14 +31,19 @@ class DailyHandler:
         display: GameDisplay | None,
         settings: Settings,
     ) -> None:
-        self.client = client
-        self.solver = solver
-        self.lexicon = lexicon
-        self.display = display
-        self.settings = settings
-        self.logger = get_logger(__name__)
+        """Initialize the daily handler.
 
-    def run_game(self) -> dict[str, Any]:
+        Args:
+            client: The game client for API calls
+            solver: The solver engine
+            lexicon: The word lexicon
+            display: The game display (optional)
+            settings: Application settings
+        """
+        super().__init__(solver, lexicon, display, settings)
+        self.client = client
+
+    def run_game(self) -> GameSummary:
         """Solve the daily Wordle puzzle using improved strategy."""
         self.logger.info(msg="Starting daily puzzle solution")
         game_start_time = time.time()
@@ -270,7 +276,7 @@ class DailyHandler:
         self, total_time: float, daily_game_manager: DailyGameStateManager
     ) -> dict[str, Any]:
         """Generate final game summary for Daily mode."""
-        game_summary: GameSummaryDict = daily_game_manager.get_game_summary()
+        game_summary = daily_game_manager.get_game_summary()
 
         # Type-safe access to game_summary
         guesses: list[dict[str, str | bool]] = game_summary["guesses"]
@@ -315,7 +321,7 @@ class DailyHandler:
         if not self.game_state_manager:
             raise RuntimeError("Game state manager is not initialized")
 
-        game_summary: GameSummaryDict = self.game_state_manager.get_game_summary()
+        game_summary = self.game_state_manager.get_game_summary()
 
         # Type-safe access to game_summary
         guesses: list[dict[str, str | bool]] = game_summary["guesses"]

@@ -10,8 +10,8 @@ from core.algorithms.solver_engine import SolverEngine
 from core.algorithms.state_manager import (
     DailyGameStateManager,
     GameStateManager,
-    GameSummaryDict,
 )
+from core.domain.types import GameSummary, SimulationResult
 from infrastructure.api.game_client import GameClient, WordleAPIError
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay
@@ -21,33 +21,6 @@ from .modes.daily_handler import DailyHandler
 from .modes.offline_handler import OfflineHandler
 from .modes.random_handler import RandomHandler
 from .modes.word_handler import WordHandler
-
-
-class GameResult(TypedDict):
-    """Type definition for game result."""
-
-    solved: bool
-    failed: bool
-    total_turns: int
-    final_answer: str | None
-
-
-class PerformanceMetrics(TypedDict):
-    """Type definition for performance metrics."""
-
-    total_game_time_seconds: float
-    average_time_per_turn: float
-    remaining_possibilities: list[str]
-
-
-class GameSummary(TypedDict):
-    """Type definition for game summary."""
-
-    game_result: GameResult
-    performance_metrics: PerformanceMetrics
-    guess_history: list[dict[str, str | bool]]
-    lexicon_stats: dict[str, int]
-    timestamp: float
 
 
 class GuessAnalysis(TypedDict):
@@ -60,18 +33,6 @@ class GuessAnalysis(TypedDict):
     possible_answers_count: int
     information_bits: float
     is_optimal_first_guess: bool
-
-
-class SimulationResult(TypedDict):
-    """Type definition for simulation result."""
-
-    target_answer: str
-    solved: bool
-    turns_used: int
-    simulation_time: float
-    final_state: dict[
-        str, str | int | float | bool | list[str] | list[dict[str, str | bool]]
-    ]
 
 
 class Orchestrator:
@@ -168,7 +129,7 @@ class Orchestrator:
         Returns:
             Comprehensive game summary
         """
-        game_summary: GameSummaryDict = daily_game_manager.get_game_summary()
+        game_summary = daily_game_manager.get_game_summary()
 
         # Type-safe access to game_summary
         guesses: list[dict[str, str | bool]] = game_summary["guesses"]
@@ -302,7 +263,7 @@ class Orchestrator:
         if not self.game_state_manager:
             raise RuntimeError("Game state manager is not initialized")
 
-        game_summary: GameSummaryDict = self.game_state_manager.get_game_summary()
+        game_summary = self.game_state_manager.get_game_summary()
 
         # Type-safe access to game_summary
         guesses: list[dict[str, str | bool]] = game_summary["guesses"]
