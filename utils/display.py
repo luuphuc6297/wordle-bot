@@ -246,11 +246,13 @@ class BenchmarkDisplay:
             if guess_count == "losses":
                 print(f"  💔 Losses: {count}")
             else:
+                # Extract number from "3_guesses" format
+                num_guesses = guess_count.replace("_guesses", "")
                 bar_length = int((count / results["games_played"]) * 30)
                 bar = "█" * bar_length + "░" * (30 - bar_length)
                 percentage = (count / results["games_played"]) * 100
                 print(
-                    f"  {guess_count} Guess{'es' if guess_count != 1 else ''}: "
+                    f"  {num_guesses} Guess{'es' if num_guesses != '1' else ''}: "
                     f"{count:3d} {bar} {percentage:5.1f}%"
                 )
 

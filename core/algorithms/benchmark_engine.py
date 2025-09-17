@@ -184,7 +184,8 @@ class BenchmarkEngine:
         # Guess distribution
         distribution = defaultdict(int)
         for result in wins:
-            distribution[result["guesses_used"]] += 1
+            guesses = result["guesses_used"]
+            distribution[f"{guesses}_guesses"] += 1
         distribution["losses"] = len(losses)
 
         # Calculate statistics
