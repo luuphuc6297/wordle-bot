@@ -53,8 +53,8 @@ class GameSummaryDict(TypedDict):
     possible_answers: list[str]
 
 
-class SimulationResult(TypedDict):
-    """Type definition for simulation result."""
+class GameSummary(TypedDict):
+    """Type definition for final game summary."""
 
     game_result: GameResult
     performance_metrics: PerformanceMetrics
@@ -63,5 +63,11 @@ class SimulationResult(TypedDict):
     timestamp: float
 
 
-# Alias for backward compatibility
-GameSummary = GameSummaryDict
+class SimulationResult(TypedDict):
+    """Type definition for simulation result."""
+
+    game_result: GameResult
+    performance_metrics: PerformanceMetrics
+    guess_history: list[GuessHistoryItem]
+    lexicon_stats: LexiconStats
+    timestamp: float
