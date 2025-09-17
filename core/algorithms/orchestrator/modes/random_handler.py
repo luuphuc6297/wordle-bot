@@ -9,6 +9,7 @@ from typing import Any
 from config.settings import Settings
 from core.algorithms.solver_engine import SolverEngine
 from core.algorithms.state_manager import GameStateManager
+from core.domain.types import SimulationResult
 from infrastructure.api.game_client import GameClient
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay
@@ -33,7 +34,7 @@ class RandomHandler:
         self.settings = settings
         self.logger = get_logger(__name__)
 
-    def run_game(self) -> dict[str, Any]:
+    def run_game(self) -> SimulationResult:
         """Play a game using the random API mode (/random)."""
         if self.display:
             self.display.print_header()
@@ -50,26 +51,26 @@ class RandomHandler:
             if self.display:
                 self.display.show_feedback(random_result, 0)
             return {
-                "target_answer": "random",
-                "solved": True,
-                "turns_used": 1,
-                "simulation_time": round(time.time() - start, 2),
-                "final_state": {
-                    "turn": 1,
-                    "total_guesses": 1,
-                    "remaining_answers": 0,
-                    "is_solved": True,
-                    "is_failed": False,
-                    "remaining_turns": 0,
-                    "guesses": [
-                        {
-                            "guess": initial_guess,
-                            "feedback": random_result.to_pattern_string(),
-                            "correct": True,
-                        }
-                    ],
-                    "possible_answers": [],
+                "game_result": {
+                    "solved": True,
+                    "failed": False,
+                    "total_turns": 1,
+                    "final_answer": initial_guess,
                 },
+                "performance_metrics": {
+                    "total_game_time_seconds": round(time.time() - start, 2),
+                    "average_time_per_turn": round(time.time() - start, 2),
+                    "remaining_possibilities": [],
+                },
+                "guess_history": [
+                    {
+                        "guess": initial_guess,
+                        "feedback": random_result.to_pattern_string(),
+                        "correct": True,
+                    }
+                ],
+                "lexicon_stats": self.lexicon.get_stats(),
+                "timestamp": time.time(),
             }
 
         # Step 2: Find the actual target word by trying all possible answers
@@ -92,26 +93,26 @@ class RandomHandler:
         if not target_word:
             self.logger.warning("Could not determine target word from Random API")
             return {
-                "target_answer": "random",
-                "solved": False,
-                "turns_used": 1,
-                "simulation_time": round(time.time() - start, 2),
-                "final_state": {
-                    "turn": 1,
-                    "total_guesses": 1,
-                    "remaining_answers": len(possible_answers),
-                    "is_solved": False,
-                    "is_failed": True,
-                    "remaining_turns": 5,
-                    "guesses": [
-                        {
-                            "guess": initial_guess,
-                            "feedback": random_result.to_pattern_string(),
-                            "correct": False,
-                        }
-                    ],
-                    "possible_answers": possible_answers,
+                "game_result": {
+                    "solved": False,
+                    "failed": True,
+                    "total_turns": 1,
+                    "final_answer": None,
                 },
+                "performance_metrics": {
+                    "total_game_time_seconds": round(time.time() - start, 2),
+                    "average_time_per_turn": round(time.time() - start, 2),
+                    "remaining_possibilities": possible_answers,
+                },
+                "guess_history": [
+                    {
+                        "guess": initial_guess,
+                        "feedback": random_result.to_pattern_string(),
+                        "correct": False,
+                    }
+                ],
+                "lexicon_stats": self.lexicon.get_stats(),
+                "timestamp": time.time(),
             }
 
         # Step 4: Use entropy algorithm to solve the target word
@@ -205,19 +206,23 @@ class RandomHandler:
         solved = game_manager.is_solved()
         turns_used = len(game_manager.get_current_state().guesses)
 
+        game_summary = game_manager.get_game_summary()
+
         return {
-            "target_answer": "random",
-            "solved": solved,
-            "turns_used": turns_used,
-            "simulation_time": round(time.time() - start_time, 2),
-            "final_state": {
-                "turn": game_manager.get_current_state().turn,
-                "total_guesses": len(game_manager.get_current_state().guesses),
-                "remaining_answers": len(game_manager.get_possible_answers()),
-                "is_solved": solved,
-                "is_failed": game_manager.is_failed(),
-                "remaining_turns": game_manager.get_current_state().remaining_turns,
-                "guesses": game_manager.get_game_summary()["guesses"],
-                "possible_answers": game_manager.get_possible_answers(),
+            "game_result": {
+                "solved": solved,
+                "failed": game_manager.is_failed(),
+                "total_turns": turns_used,
+                "final_answer": target_word if solved else None,
             },
+            "performance_metrics": {
+                "total_game_time_seconds": round(time.time() - start_time, 2),
+                "average_time_per_turn": round(
+                    (time.time() - start_time) / max(1, turns_used), 2
+                ),
+                "remaining_possibilities": game_manager.get_possible_answers(),
+            },
+            "guess_history": game_summary["guesses"],
+            "lexicon_stats": self.lexicon.get_stats(),
+            "timestamp": time.time(),
         }

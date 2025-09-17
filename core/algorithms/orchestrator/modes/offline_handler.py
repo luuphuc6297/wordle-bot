@@ -4,12 +4,12 @@ Handles offline game simulation logic.
 """
 
 import time
-from typing import Any
 
 from config.settings import Settings
 from core.algorithms.solver_engine import SolverEngine
 from core.algorithms.state_manager import GameStateManager
 from core.domain.models import EntropyCalculation
+from core.domain.types import SimulationResult
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay
 from utils.logging_config import get_logger
@@ -33,7 +33,7 @@ class OfflineHandler:
 
     def run_game(
         self, target_answer: str, game_id: str | None = None
-    ) -> dict[str, Any]:
+    ) -> SimulationResult:
         """Simulate a game with a known target answer for testing."""
         if not self.lexicon.is_valid_answer(target_answer):
             raise ValueError(f"'{target_answer}' is not a valid answer word")
@@ -120,21 +120,23 @@ class OfflineHandler:
                     len(game_manager.get_current_state().guesses), target_answer
                 )
 
+        game_summary = game_manager.get_game_summary()
+        solved = game_manager.is_solved()
+        turns_used = len(game_manager.get_current_state().guesses)
+
         return {
-            "target_answer": target_answer,
-            "solved": game_manager.is_solved(),
-            "turns_used": len(game_manager.get_current_state().guesses),
-            "simulation_time": round(simulation_time, 2),
-            "final_state": {
-                "turn": game_manager.get_game_summary()["turn"],
-                "total_guesses": game_manager.get_game_summary()["total_guesses"],
-                "remaining_answers": game_manager.get_game_summary()[
-                    "remaining_answers"
-                ],
-                "is_solved": game_manager.get_game_summary()["is_solved"],
-                "is_failed": game_manager.get_game_summary()["is_failed"],
-                "remaining_turns": game_manager.get_game_summary()["remaining_turns"],
-                "guesses": game_manager.get_game_summary()["guesses"],
-                "possible_answers": game_manager.get_game_summary()["possible_answers"],
+            "game_result": {
+                "solved": solved,
+                "failed": game_manager.is_failed(),
+                "total_turns": turns_used,
+                "final_answer": target_answer if solved else None,
             },
+            "performance_metrics": {
+                "total_game_time_seconds": round(simulation_time, 2),
+                "average_time_per_turn": round(simulation_time / max(1, turns_used), 2),
+                "remaining_possibilities": game_summary["possible_answers"],
+            },
+            "guess_history": game_summary["guesses"],
+            "lexicon_stats": self.lexicon.get_stats(),
+            "timestamp": time.time(),
         }

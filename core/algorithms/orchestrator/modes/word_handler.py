@@ -4,11 +4,11 @@ Handles the word target mode (/word/{target}) gameplay logic.
 """
 
 import time
-from typing import Any
 
 from config.settings import Settings
 from core.algorithms.solver_engine import SolverEngine
 from core.algorithms.state_manager import GameStateManager
+from core.domain.types import SimulationResult
 from infrastructure.api.game_client import GameClient
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay
@@ -33,7 +33,7 @@ class WordHandler:
         self.settings = settings
         self.logger = get_logger(__name__)
 
-    def run_game(self, target_answer: str) -> dict[str, Any]:
+    def run_game(self, target_answer: str) -> SimulationResult:
         """Play a game against a specific target using /word/{target}."""
         if self.display:
             self.display.print_header()
@@ -55,19 +55,24 @@ class WordHandler:
             turn += 1
 
         summary = game_manager.get_game_summary()
+        solved = game_manager.is_solved()
+        turns_used = len(game_manager.get_current_state().guesses)
+
         return {
-            "target_answer": target_answer,
-            "solved": game_manager.is_solved(),
-            "turns_used": len(game_manager.get_current_state().guesses),
-            "simulation_time": round(time.time() - start, 2),
-            "final_state": {
-                "turn": summary["turn"],
-                "total_guesses": summary["total_guesses"],
-                "remaining_answers": summary["remaining_answers"],
-                "is_solved": summary["is_solved"],
-                "is_failed": summary["is_failed"],
-                "remaining_turns": summary["remaining_turns"],
-                "guesses": summary["guesses"],
-                "possible_answers": summary["possible_answers"],
+            "game_result": {
+                "solved": solved,
+                "failed": game_manager.is_failed(),
+                "total_turns": turns_used,
+                "final_answer": target_answer if solved else None,
             },
+            "performance_metrics": {
+                "total_game_time_seconds": round(time.time() - start, 2),
+                "average_time_per_turn": round(
+                    (time.time() - start) / max(1, turns_used), 2
+                ),
+                "remaining_possibilities": summary["possible_answers"],
+            },
+            "guess_history": summary["guesses"],
+            "lexicon_stats": self.lexicon.get_stats(),
+            "timestamp": time.time(),
         }
