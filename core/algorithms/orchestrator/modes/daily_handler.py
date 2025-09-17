@@ -4,7 +4,6 @@ Handles the daily puzzle mode gameplay logic.
 """
 
 import time
-from typing import Any
 
 from config.settings import Settings
 from core.algorithms.solver_engine import SolverEngine
@@ -262,9 +261,7 @@ class DailyHandler(BaseGameHandler):
 
             # Game completed - generate final results
             total_game_time: float = time.time() - game_start_time
-            final_summary: dict[str, Any] = self._generate_final_summary(
-                total_game_time
-            )
+            final_summary: GameSummary = self._generate_final_summary(total_game_time)
 
             return final_summary
 

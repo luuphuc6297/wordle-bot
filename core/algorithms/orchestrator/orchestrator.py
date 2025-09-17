@@ -391,6 +391,14 @@ class Orchestrator:
         """
         from core.algorithms.benchmark_engine import BenchmarkEngine
 
+        # Validate daily mode benchmark
+        if mode == "daily" and num_games > 1:
+            self.logger.warning(
+                f"Daily mode benchmark with {num_games} games is not meaningful. "
+                "Daily puzzle only has one word per day. Limiting to 1 game."
+            )
+            num_games = 1
+
         self.logger.info(
             f"Starting online benchmark with {num_games} games using {mode} API"
         )
@@ -435,14 +443,19 @@ class Orchestrator:
                         "success": won,
                     }
                 else:
+                    # Handle SimulationResult format
+                    game_result = result.get("game_result", {})
+                    performance_metrics = result.get("performance_metrics", {})
                     return {
-                        "target_word": result.get("target_answer", "unknown"),
-                        "won": result.get("solved", False),
-                        "guesses_used": result.get("turns_used", 0),
+                        "target_word": game_result.get("final_answer", "unknown"),
+                        "won": game_result.get("solved", False),
+                        "guesses_used": game_result.get("total_turns", 0),
                         "guesses": [],
-                        "game_duration": result.get("simulation_time", 0.0),
-                        "final_state": result.get("final_state", {}),
-                        "success": result.get("solved", False),
+                        "game_duration": performance_metrics.get(
+                            "total_game_time_seconds", 0.0
+                        ),
+                        "final_state": result,
+                        "success": game_result.get("solved", False),
                     }
             except Exception as e:
                 self.logger.error(f"Error in online game: {e}")
