@@ -93,3 +93,6 @@ analytics_cache/
 
 # GitHub specific
 .github/workflows/*.yml.backup
+
+.ruff_cache/
+.cursor/

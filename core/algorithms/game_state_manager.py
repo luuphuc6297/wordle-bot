@@ -4,8 +4,12 @@ from typing import TypedDict
 
 from config.settings import Settings
 from config.settings import settings as default_settings
+from core.algorithms.game_state_manager_strategy import (
+    FilterStrategy,
+    StandardFilterStrategy,
+)
+from core.algorithms.solver_engine import SolverEngine
 from core.domain.models import FeedbackType, GameState, GuessResult
-from core.use_cases.solver_engine import SolverEngine
 from infrastructure.data.word_lexicon import WordLexicon
 
 
@@ -39,6 +43,7 @@ class GameStateManager:
         self.settings: Settings = app_settings or default_settings
         self.lexicon: WordLexicon = WordLexicon()
         self.solver: SolverEngine = SolverEngine(app_settings=self.settings)
+        self.filter_strategy: FilterStrategy = StandardFilterStrategy(self.solver)
 
         initial_possible_answers = initial_answers or self.lexicon.answers
 
@@ -71,16 +76,10 @@ class GameStateManager:
         Args:
             guess_result: The guess result to use for filtering
         """
-        guess = guess_result.guess
-        feedback = guess_result.feedback
-
-        filtered_answers: list[str] = []
-
-        for answer in self.game_state.possible_answers:
-            if self._is_answer_consistent(guess, feedback, answer):
-                filtered_answers.append(answer)
-
-        self.game_state.possible_answers = filtered_answers
+        self.game_state.possible_answers = self.filter_strategy.filter_answers(
+            guess_result=guess_result,
+            candidates=self.game_state.possible_answers,
+        )
 
     def _is_answer_consistent(
         self, guess: str, feedback: list[FeedbackType], answer: str

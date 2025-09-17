@@ -2,10 +2,14 @@
 
 from config.settings import Settings
 from config.settings import settings as default_settings
+from core.algorithms.game_state_manager import GameSummaryDict
+from core.algorithms.game_state_manager_strategy import (
+    DailyApiFilterStrategy,
+    FilterStrategy,
+)
+from core.algorithms.solver_engine import SolverEngine
 from core.domain.constants import WORD_LENGTH
 from core.domain.models import FeedbackType, GameState, GuessResult
-from core.use_cases.game_state_manager import GameSummaryDict
-from core.use_cases.solver_engine import SolverEngine
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.logging_config import get_logger
 
@@ -28,6 +32,7 @@ class DailyGameStateManager:
         self.logger = get_logger(__name__)
         self.lexicon: WordLexicon = WordLexicon()
         self.solver: SolverEngine = SolverEngine(app_settings=self.settings)
+        self.filter_strategy: FilterStrategy = DailyApiFilterStrategy()
 
         # Initialize with all possible answers
         self._possible_answers: list[str] = (
@@ -47,46 +52,14 @@ class DailyGameStateManager:
         self._guess_history.append(guess_result)
         self._game_state.add_guess(guess_result)
 
-        # Use improved filtering logic for Daily mode
-        self._possible_answers = self._filter_answers_improved(guess_result)
+        # Use strategy filtering for Daily mode
+        self._possible_answers = self.filter_strategy.filter_answers(
+            guess_result=guess_result,
+            candidates=self._possible_answers,
+        )
         self._game_state.possible_answers = self._possible_answers.copy()
 
-    def _filter_answers_improved(self, guess_result: GuessResult) -> list[str]:
-        """Improved filtering logic specifically for Daily mode.
-
-        This method uses a more robust approach to handle edge cases
-        that can occur with Daily API responses.
-
-        Args:
-            guess_result: The guess result to filter by
-
-        Returns:
-            List of possible answers that are consistent with the guess result
-        """
-        filtered_answers = []
-
-        # Debug logging
-        self.logger.info(
-            f"Filtering {len(self._possible_answers)} answers with guess: {guess_result.guess} -> {guess_result.to_pattern_string()}"
-        )
-
-        for answer in self._possible_answers:
-            is_consistent = self._is_answer_consistent_improved(guess_result, answer)
-            if is_consistent:
-                filtered_answers.append(answer)
-            else:
-                self.logger.debug(
-                    f"Answer '{answer}' is inconsistent with {guess_result.guess} -> {guess_result.to_pattern_string()}"
-                )
-
-        self.logger.info(
-            f"Filtered from {len(self._possible_answers)} to {len(filtered_answers)} answers"
-        )
-        if len(filtered_answers) == 0:
-            self.logger.warning(
-                f"No answers remain after filtering with {guess_result.guess} -> {guess_result.to_pattern_string()}"
-            )
-        return filtered_answers
+    # Note: detailed per-letter filter is now part of DailyApiFilterStrategy
 
     def _is_answer_consistent_improved(
         self, guess_result: GuessResult, answer: str

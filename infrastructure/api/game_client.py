@@ -120,8 +120,6 @@ class GameClient:
             raise ValueError(f"Guess must be exactly 5 letters, got: '{guess}'")
         guess = guess.upper()
         try:
-            # Random API: GET /random?guess=WORD
-            # WARNING: Each call returns a DIFFERENT target word!
             response = self.session.get(
                 f"{self.base_url}/random", params={"guess": guess}, timeout=self.timeout
             )

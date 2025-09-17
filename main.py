@@ -7,9 +7,9 @@ from collections.abc import Mapping
 from typing import Any
 
 from config.settings import Settings, settings
-from core.use_cases.analytics_engine import AnalyticsEngine
-from core.use_cases.benchmark_engine import BenchmarkEngine
-from core.use_cases.orchestrator import Orchestrator
+from core.algorithms.analytics_engine import AnalyticsEngine
+from core.algorithms.benchmark_engine import BenchmarkEngine
+from core.algorithms.orchestrator import Orchestrator
 from utils.logging_config import get_logger, setup_logging
 
 

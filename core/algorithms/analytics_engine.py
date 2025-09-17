@@ -8,9 +8,9 @@ from typing import Any, TypedDict
 
 import numpy as np
 
+from core.algorithms.game_state_manager import GameStateManager
+from core.algorithms.solver_engine import SolverEngine
 from core.domain.models import EntropyCalculation
-from core.use_cases.game_state_manager import GameStateManager
-from core.use_cases.solver_engine import SolverEngine
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.logging_config import get_logger
 

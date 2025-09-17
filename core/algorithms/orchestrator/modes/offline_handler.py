@@ -1,0 +1,140 @@
+"""Offline simulation mode handler.
+
+Handles offline game simulation logic.
+"""
+
+import time
+from typing import Any
+
+from config.settings import Settings
+from core.algorithms.game_state_manager import GameStateManager
+from core.algorithms.solver_engine import SolverEngine
+from core.domain.models import EntropyCalculation
+from infrastructure.data.word_lexicon import WordLexicon
+from utils.display import GameDisplay
+from utils.logging_config import get_logger
+
+
+class OfflineHandler:
+    """Handler for offline simulation mode."""
+
+    def __init__(
+        self,
+        solver: SolverEngine,
+        lexicon: WordLexicon,
+        display: GameDisplay | None,
+        settings: Settings,
+    ) -> None:
+        self.solver = solver
+        self.lexicon = lexicon
+        self.display = display
+        self.settings = settings
+        self.logger = get_logger(__name__)
+
+    def run_game(
+        self, target_answer: str, game_id: str | None = None
+    ) -> dict[str, Any]:
+        """Simulate a game with a known target answer for testing."""
+        if not self.lexicon.is_valid_answer(target_answer):
+            raise ValueError(f"'{target_answer}' is not a valid answer word")
+
+        self.logger.info(f"Simulating game with target answer: {target_answer}")
+
+        # Initialize display if enabled
+        if self.display:
+            self.display.print_header()
+            self.display.start_new_game(game_id or f"sim_{target_answer}")
+
+        # Initialize local game state (no API calls)
+        game_manager = GameStateManager()
+        simulation_start = time.time()
+
+        turn = 1
+        while not game_manager.is_game_over() and turn <= 6:
+            current_answers = game_manager.get_possible_answers()
+
+            # Show thinking process
+            if self.display:
+                self.display.show_thinking(
+                    f"Analyzing {len(current_answers)} possible answers..."
+                )
+
+            # Get best guess with timing
+            guess_start_time: float = time.time()
+            guess: str = self.solver.find_best_guess(
+                possible_answers=current_answers, turn=turn
+            )
+            calculation_time: float = time.time() - guess_start_time
+
+            # Calculate entropy for display
+            entropy: float = 0.0
+            if len(current_answers) > 1 and self.display and self.display.show_detailed:
+                entropy_calc: EntropyCalculation = (
+                    self.solver.calculate_detailed_entropy(
+                        guess_word=guess, possible_answers=current_answers
+                    )
+                )
+                entropy = entropy_calc.entropy
+
+            # Show guess submission
+            if self.display:
+                self.display.show_guess_submission(
+                    turn,
+                    guess,
+                    remaining_count=len(current_answers),
+                    entropy=entropy,
+                    calculation_time=calculation_time,
+                )
+
+            # Simulate feedback
+            feedback_pattern: str = self.solver._simulate_feedback(
+                guess, answer=target_answer
+            )
+
+            # Create guess result
+            from core.domain.models import GuessResult
+
+            guess_result = GuessResult.from_api_response(guess, feedback_pattern)
+
+            # Update state
+            game_manager.add_guess_result(guess_result)
+
+            # Show feedback
+            if self.display:
+                self.display.show_feedback(
+                    guess_result, game_manager.get_remaining_answers_count()
+                )
+
+            self.logger.info(msg=f"Turn {turn}: {guess} -> {feedback_pattern}")
+
+            turn += 1
+
+        simulation_time = time.time() - simulation_start
+
+        # Show final result
+        if self.display:
+            if game_manager.is_solved():
+                self.display.show_victory(len(game_manager.get_current_state().guesses))
+            else:
+                self.display.show_failure(
+                    len(game_manager.get_current_state().guesses), target_answer
+                )
+
+        return {
+            "target_answer": target_answer,
+            "solved": game_manager.is_solved(),
+            "turns_used": len(game_manager.get_current_state().guesses),
+            "simulation_time": round(simulation_time, 2),
+            "final_state": {
+                "turn": game_manager.get_game_summary()["turn"],
+                "total_guesses": game_manager.get_game_summary()["total_guesses"],
+                "remaining_answers": game_manager.get_game_summary()[
+                    "remaining_answers"
+                ],
+                "is_solved": game_manager.get_game_summary()["is_solved"],
+                "is_failed": game_manager.get_game_summary()["is_failed"],
+                "remaining_turns": game_manager.get_game_summary()["remaining_turns"],
+                "guesses": game_manager.get_game_summary()["guesses"],
+                "possible_answers": game_manager.get_game_summary()["possible_answers"],
+            },
+        }
