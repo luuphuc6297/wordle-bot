@@ -66,10 +66,10 @@ python main.py play-random --time-budget 10.0 --verbose
 #### Word Target Mode
 ```bash
 # Play against a specific word
-python main.py play-word --target CRANE
+uv run python main.py play-word --target CRANE
 
 # Play against multiple words
-python main.py play-word --target CRANE AUDIO ZEBRA
+uv run python main.py play-word --target CRANE AUDIO ZEBRA
 ```
 
 ### Offline Modes (Simulation)
@@ -78,10 +78,10 @@ These modes run locally without API calls:
 #### Simulation Mode
 ```bash
 # Simulate solving with known answer
-python main.py simulate --target CRANE
+uv run python main.py simulate --target CRANE
 
 # With verbose output and JSON format
-python main.py simulate --target AUDIO --verbose --output-format json
+uv run python main.py simulate --target AUDIO --verbose --output-format json
 ```
 
 #### Analysis Mode
@@ -98,16 +98,16 @@ python main.py analyze STARE --answers my_words.txt
 ### Offline Benchmarking
 ```bash
 # Quick test (20 games)
-python main.py benchmark --quick
+uv run python main.py benchmark --quick
 
 # Full benchmark (100 games)
-python main.py benchmark --games 100
+uv run python main.py benchmark --games 100
 
 # Stress test with difficult words
-python main.py benchmark --stress
+uv run python main.py benchmark --stress
 
 # Save results to file
-python main.py benchmark --games 50 --output results.json
+uv run python main.py benchmark --games 50 --output results.json
 ```
 
 ### Online Benchmarking
@@ -125,13 +125,13 @@ python main.py online-benchmark --api-mode word --target-words CRANE AUDIO ZEBRA
 ### Analytics
 ```bash
 # Strategy analysis
-python main.py analytics --analysis-type strategy
+uv run python main.py analytics --analysis-type strategy
 
 # Word difficulty analysis
-python main.py analytics --analysis-type difficulty --sample-size 10
+uv run python main.py analytics --analysis-type difficulty --sample-size 10
 
 # Online analytics with daily API
-python main.py online-analytics --api-mode daily --analysis-type difficulty
+uv run python main.py online-analytics --api-mode daily --analysis-type difficulty
 ```
 
 ## 🏛️ Architecture
