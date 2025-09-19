@@ -60,7 +60,7 @@ class DependencyContainer:
             self._game_client = GameClient(
                 base_url=self.settings.WORDLE_API_BASE_URL,
                 timeout=self.settings.API_TIMEOUT_SECONDS,
-                retry_attempts=self.settings.API_RETRY_ATTEMPTS,
+                app_settings=self.settings,
             )
         return self._game_client
 
@@ -75,10 +75,7 @@ class DependencyContainer:
     def analytics_engine(self) -> AnalyticsEngine:
         """Get the analytics engine instance."""
         if self._analytics_engine is None:
-            self._analytics_engine = AnalyticsEngine(
-                solver_time_budget=self.settings.SOLVER_TIME_BUDGET_SECONDS,
-                max_workers=self.settings.SOLVER_MAX_WORKERS,
-            )
+            self._analytics_engine = AnalyticsEngine()
         return self._analytics_engine
 
     @property
@@ -101,9 +98,7 @@ class DependencyContainer:
             Configured game state manager
         """
         if mode == "daily":
-            from core.algorithms.state_manager import DailyGameStateManager
-
-            return DailyGameStateManager(app_settings=self.settings)
+            return GameStateManager(app_settings=self.settings)
         else:
             return GameStateManager(app_settings=self.settings)
 
