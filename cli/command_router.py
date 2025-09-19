@@ -102,7 +102,9 @@ class CommandRouter:
         if args.answers:
             try:
                 with open(args.answers) as f:
-                    possible_answers = [line.strip().upper() for line in f if line.strip()]
+                    possible_answers = [
+                        line.strip().upper() for line in f if line.strip()
+                    ]
                 self.logger.info(
                     f"Loaded {len(possible_answers)} possible answers from {args.answers}"
                 )
@@ -122,8 +124,8 @@ class CommandRouter:
         Returns:
             Benchmark results
         """
-        from core.algorithms.benchmark_engine import BenchmarkEngine
         from config.settings import settings
+        from core.algorithms.benchmark_engine import BenchmarkEngine
 
         # Create benchmark engine
         benchmark = BenchmarkEngine(
@@ -167,7 +169,9 @@ class CommandRouter:
         if args.analysis_type == "difficulty":
             result = {
                 "analysis_type": "word_difficulty",
-                "results": analytics.analyze_word_difficulty(sample_size=args.sample_size),
+                "results": analytics.analyze_word_difficulty(
+                    sample_size=args.sample_size
+                ),
             }
         elif args.analysis_type == "patterns":
             result = {
@@ -231,7 +235,9 @@ class CommandRouter:
             num_games = 20
         else:
             num_games = args.games
-            self.logger.info(f"Running online benchmark with {num_games} games using {api_mode} API...")
+            self.logger.info(
+                f"Running online benchmark with {num_games} games using {api_mode} API..."
+            )
 
         return self.orchestrator.run_online_benchmark(
             num_games=num_games, mode=api_mode, target_words=target_words

@@ -1,7 +1,6 @@
 """Game summary service for generating consistent game summaries."""
 
 import time
-from typing import Union
 
 from core.algorithms.state_manager import ApiGameStateManager, GameStateManager
 from core.domain.types import GameSummary, GuessHistoryItem
@@ -23,7 +22,7 @@ class GameSummaryService:
 
     def generate_summary(
         self,
-        game_state_manager: Union[GameStateManager, ApiGameStateManager],
+        game_state_manager: GameStateManager | ApiGameStateManager,
         total_time: float,
         game_type: str = "standard",
     ) -> GameSummary:

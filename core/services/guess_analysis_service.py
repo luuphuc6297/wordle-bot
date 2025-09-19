@@ -1,6 +1,6 @@
 """Guess analysis service for analyzing individual guesses."""
 
-from typing import Any, TypedDict
+from typing import TypedDict
 
 from core.algorithms.solver_engine import SolverEngine
 from infrastructure.data.word_lexicon import WordLexicon

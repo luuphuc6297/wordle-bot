@@ -2,7 +2,7 @@
 
 from config.settings import Settings
 from core.algorithms.state_manager import ApiGameStateManager, GameStateManager
-from infrastructure.api.game_client import GameClient, WordleAPIError
+from infrastructure.api.game_client import WordleAPIError
 from utils.logging_config import get_logger
 
 

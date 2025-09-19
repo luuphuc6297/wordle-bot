@@ -78,7 +78,9 @@ class WordleBotApp:
                 self.logger.exception("Full error details:")
             return 1
 
-    def _output_results(self, result: Mapping[str, Any], args: argparse.Namespace) -> None:
+    def _output_results(
+        self, result: Mapping[str, Any], args: argparse.Namespace
+    ) -> None:
         """Output results in the appropriate format.
 
         Args:
@@ -104,7 +106,9 @@ class WordleBotApp:
 
         print(formatter.format(result))
 
-    def _save_results_to_file(self, result: Mapping[str, Any], filename: str, output_format: str) -> None:
+    def _save_results_to_file(
+        self, result: Mapping[str, Any], filename: str, output_format: str
+    ) -> None:
         """Save results to file.
 
         Args:

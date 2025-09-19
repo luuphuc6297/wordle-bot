@@ -1,9 +1,8 @@
 """Benchmark service for running benchmarks and analytics."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.algorithms.benchmark_engine import BenchmarkEngine
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from core.algorithms.orchestrator import Orchestrator

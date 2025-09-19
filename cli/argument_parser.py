@@ -56,7 +56,9 @@ Examples:
             help="Command to execute",
         )
 
-        parser.add_argument("word", nargs="?", help="Word to analyze (for analyze command)")
+        parser.add_argument(
+            "word", nargs="?", help="Word to analyze (for analyze command)"
+        )
 
         # Basic arguments
         parser.add_argument("--target", "-t", help="Target answer for simulation mode")
@@ -82,7 +84,9 @@ Examples:
             help="Time budget for solver in seconds (default: 5.0)",
         )
 
-        parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+        parser.add_argument(
+            "--verbose", "-v", action="store_true", help="Enable verbose logging"
+        )
 
         # Benchmark arguments
         parser.add_argument(
@@ -93,13 +97,21 @@ Examples:
             help="Number of games for benchmark mode (default: 100)",
         )
 
-        parser.add_argument("--quick", "-q", action="store_true", help="Run quick benchmark (20 games)")
+        parser.add_argument(
+            "--quick", "-q", action="store_true", help="Run quick benchmark (20 games)"
+        )
 
-        parser.add_argument("--stress", action="store_true", help="Run stress test with difficult words")
+        parser.add_argument(
+            "--stress", action="store_true", help="Run stress test with difficult words"
+        )
 
-        parser.add_argument("--no-display", action="store_true", help="Disable rich console display")
+        parser.add_argument(
+            "--no-display", action="store_true", help="Disable rich console display"
+        )
 
-        parser.add_argument("--output", "-o", help="Output file for benchmark results (JSON format)")
+        parser.add_argument(
+            "--output", "-o", help="Output file for benchmark results (JSON format)"
+        )
 
         # Analytics arguments
         parser.add_argument(
@@ -142,7 +154,9 @@ Examples:
         """
         return self.parser.parse_args()
 
-    def get_runtime_settings_overrides(self, args: argparse.Namespace) -> dict[str, Any]:
+    def get_runtime_settings_overrides(
+        self, args: argparse.Namespace
+    ) -> dict[str, Any]:
         """Extract runtime settings overrides from CLI arguments.
 
         Args:

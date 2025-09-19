@@ -23,11 +23,13 @@ class TextFormatter(BaseFormatter):
         if "answer" in result:
             # Game results
             if result.get("is_solved", False):
-                output_lines.append(f"✅ PUZZLE SOLVED!")
+                output_lines.append("✅ PUZZLE SOLVED!")
                 output_lines.append(f"Answer: {result['answer']}")
                 output_lines.append(f"Turns: {result['turns_used']}")
             else:
-                output_lines.append(f"❌ Failed to solve in {result['turns_used']} turns")
+                output_lines.append(
+                    f"❌ Failed to solve in {result['turns_used']} turns"
+                )
             output_lines.append(f"Simulation time: {result['simulation_time']:.2f}s")
 
         elif "entropy" in result:
@@ -44,8 +46,12 @@ class TextFormatter(BaseFormatter):
             if "performance_analysis" in result:
                 analysis = result["performance_analysis"]
                 output_lines.append("\n🔍 Algorithm Analysis:")
-                output_lines.append(f"  Grade: {analysis['grade']} ({analysis['performance_level']})")
-                output_lines.append(f"  Efficiency Score: {analysis['efficiency_score']:.2f}")
+                output_lines.append(
+                    f"  Grade: {analysis['grade']} ({analysis['performance_level']})"
+                )
+                output_lines.append(
+                    f"  Efficiency Score: {analysis['efficiency_score']:.2f}"
+                )
                 output_lines.append(f"  Speed Score: {analysis['speed_score']:.2f}")
 
                 if analysis.get("recommendations"):
@@ -58,7 +64,9 @@ class TextFormatter(BaseFormatter):
             analysis_type = result["analysis_type"]
             data = result["results"]
 
-            output_lines.append(f"\n🔬 {analysis_type.replace('_', ' ').title()} Analysis")
+            output_lines.append(
+                f"\n🔬 {analysis_type.replace('_', ' ').title()} Analysis"
+            )
             output_lines.append("=" * 50)
 
             if analysis_type == "word_difficulty":
@@ -74,8 +82,12 @@ class TextFormatter(BaseFormatter):
             elif analysis_type == "position_analysis":
                 for pos_data in data:
                     output_lines.append(f"\n📍 Position {pos_data.position}:")
-                    output_lines.append(f"  Entropy: {pos_data.entropy_contribution:.2f}")
-                    output_lines.append(f"  Common: {', '.join(pos_data.common_patterns[:3])}")
+                    output_lines.append(
+                        f"  Entropy: {pos_data.entropy_contribution:.2f}"
+                    )
+                    output_lines.append(
+                        f"  Common: {', '.join(pos_data.common_patterns[:3])}"
+                    )
 
             elif analysis_type == "strategy_insights":
                 insights = data

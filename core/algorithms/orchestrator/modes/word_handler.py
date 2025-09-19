@@ -12,7 +12,6 @@ from core.domain.types import SimulationResult
 from infrastructure.api.game_client import GameClient
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay
-from utils.logging_config import get_logger
 
 from .base_handler import BaseGameHandler
 

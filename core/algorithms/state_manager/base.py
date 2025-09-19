@@ -210,5 +210,3 @@ class GameStateManager(BaseGameStateManager):
 
         # Filter possible answers based on the new feedback
         self._filter_possible_answers(guess_result)
-
-

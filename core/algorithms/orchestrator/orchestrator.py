@@ -1,24 +1,22 @@
 """Orchestrator - Main business logic coordinator for the Wordle-solving bot."""
 
 import logging
-import time
-from typing import Any, TypedDict
+from typing import Any
 
 from config.settings import Settings
 from config.settings import settings as default_settings
 from core.algorithms.solver_engine import SolverEngine
 from core.algorithms.state_manager import (
-    ApiGameStateManager,
     GameStateManager,
 )
 from core.coordinators.game_coordinator import GameCoordinator
-from core.domain.types import GameSummary, GuessHistoryItem, SimulationResult
+from core.domain.types import GameSummary, SimulationResult
 from core.factories.handler_factory import HandlerFactory
 from core.services.benchmark_service import BenchmarkService
 from core.services.game_initialization_service import GameInitializationService
 from core.services.game_summary_service import GameSummaryService
 from core.services.guess_analysis_service import GuessAnalysis, GuessAnalysisService
-from infrastructure.api.game_client import GameClient, WordleAPIError
+from infrastructure.api.game_client import GameClient
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay
 from utils.logging_config import get_logger
@@ -27,7 +25,6 @@ from .modes.daily_handler import DailyHandler
 from .modes.offline_handler import OfflineHandler
 from .modes.random_handler import RandomHandler
 from .modes.word_handler import WordHandler
-
 
 # GuessAnalysis moved to core.services.guess_analysis_service
 
@@ -111,9 +108,11 @@ class Orchestrator:
         # Initialize services
         self.summary_service = GameSummaryService(self.lexicon)
         self.initialization_service = GameInitializationService(self.settings)
-        self.guess_analysis_service = GuessAnalysisService(self.solver_engine, self.lexicon)
+        self.guess_analysis_service = GuessAnalysisService(
+            self.solver_engine, self.lexicon
+        )
         self.benchmark_service = BenchmarkService(self)
-        
+
         # Initialize handler factory
         self.handler_factory = HandlerFactory(
             self.game_client,
@@ -122,7 +121,7 @@ class Orchestrator:
             self.display,
             self.settings,
         )
-        
+
         # Initialize game coordinator
         self.game_coordinator = GameCoordinator(
             self.handler_factory,
