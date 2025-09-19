@@ -1,17 +1,14 @@
 {
-  "extraPaths": [
-    "libs"
-  ],
   "include": [
-    ".",
-    "libs",
-    "apps"
+    "."
   ],
   "exclude": [
     "**/__pycache__",
     "**/.*",
+    ".venv",
     "venv",
-    "**/node_modules"
+    "**/node_modules",
+    "core/algorithms"
   ],
   "reportMissingImports": "warning",
   "reportArgumentType": "none",
