@@ -234,7 +234,7 @@ class CommandRouter:
             self.logger.info(f"Running online benchmark with {num_games} games using {api_mode} API...")
 
         return self.orchestrator.run_online_benchmark(
-            num_games=num_games, api_mode=api_mode, target_words=target_words
+            num_games=num_games, mode=api_mode, target_words=target_words
         )
 
     def _handle_online_analytics(self, args: argparse.Namespace) -> Mapping[str, Any]:
@@ -253,5 +253,5 @@ class CommandRouter:
         self.logger.info(f"Running online analytics using {api_mode} API...")
 
         return self.orchestrator.run_online_analytics(
-            api_mode=api_mode, analysis_type=analysis_type, sample_size=sample_size
+            mode=api_mode, analysis_type=analysis_type, sample_size=sample_size
         )
