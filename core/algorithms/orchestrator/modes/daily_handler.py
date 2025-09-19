@@ -8,7 +8,7 @@ import time
 from config.settings import Settings
 from core.algorithms.solver_engine import SolverEngine
 from core.algorithms.state_manager import (
-    DailyGameStateManager,
+    ApiGameStateManager,
     GameStateManager,
 )
 from core.domain.types import GameSummary, GuessHistoryItem
@@ -76,7 +76,7 @@ class DailyHandler(BaseGameHandler):
                 return self._generate_final_summary(total_game_time)
 
             # Step 2: Update game state with Daily API feedback using improved manager
-            daily_game_manager = DailyGameStateManager(app_settings=self.settings)
+            daily_game_manager = ApiGameStateManager(app_settings=self.settings)
             daily_game_manager.add_guess_result(daily_result)
             possible_answers = daily_game_manager.get_possible_answers()
             self.logger.info(
@@ -119,7 +119,7 @@ class DailyHandler(BaseGameHandler):
         self,
         initial_guess: str,
         daily_result,
-        daily_game_manager: DailyGameStateManager,
+        daily_game_manager: ApiGameStateManager,
     ) -> str | None:
         """Find the actual target word by testing candidates."""
         current_answers = daily_game_manager.get_possible_answers()
@@ -139,7 +139,7 @@ class DailyHandler(BaseGameHandler):
     def _solve_daily_with_target(
         self,
         target_word: str,
-        daily_game_manager: DailyGameStateManager,
+        daily_game_manager: ApiGameStateManager,
         game_start_time: float,
     ) -> GameSummary:
         """Continue solving using /word/{target}."""
@@ -270,7 +270,7 @@ class DailyHandler(BaseGameHandler):
             raise
 
     def _generate_daily_final_summary(
-        self, total_time: float, daily_game_manager: DailyGameStateManager
+        self, total_time: float, daily_game_manager: ApiGameStateManager
     ) -> GameSummary:
         """Generate final game summary for Daily mode."""
         game_summary = daily_game_manager.get_game_summary()

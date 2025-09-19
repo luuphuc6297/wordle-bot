@@ -8,7 +8,7 @@ from config.settings import Settings
 from config.settings import settings as default_settings
 from core.algorithms.solver_engine import SolverEngine
 from core.algorithms.state_manager import (
-    DailyGameStateManager,
+    ApiGameStateManager,
     GameStateManager,
 )
 from core.coordinators.game_coordinator import GameCoordinator

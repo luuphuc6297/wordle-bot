@@ -1,7 +1,7 @@
 """Game initialization service for setting up game state managers."""
 
 from config.settings import Settings
-from core.algorithms.state_manager import DailyGameStateManager, GameStateManager
+from core.algorithms.state_manager import ApiGameStateManager, GameStateManager
 from infrastructure.api.game_client import GameClient, WordleAPIError
 from utils.logging_config import get_logger
 
@@ -36,7 +36,7 @@ class GameInitializationService:
             self.logger.error(msg=f"Failed to initialize game: {e}")
             raise
 
-    def initialize_daily_game(self) -> DailyGameStateManager:
+    def initialize_daily_game(self) -> ApiGameStateManager:
         """Initialize daily game state manager.
 
         Returns:
@@ -44,7 +44,7 @@ class GameInitializationService:
         """
         try:
             # Initialize daily game state manager
-            daily_game_manager = DailyGameStateManager(app_settings=self.settings)
+            daily_game_manager = ApiGameStateManager(app_settings=self.settings)
             self.logger.info(msg="Game initialization completed (daily mode)")
             return daily_game_manager
         except Exception as e:

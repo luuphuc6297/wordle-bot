@@ -1,4 +1,4 @@
-"""Daily game state manager with improved filtering logic for Daily mode."""
+"""API game state manager with duplicate letter handling for API modes."""
 
 from config.settings import Settings
 from config.settings import settings as default_settings
@@ -11,15 +11,15 @@ from .base import BaseGameStateManager, GameSummaryDict
 from .strategies import DuplicateFilterStrategy
 
 
-class DailyGameStateManager(BaseGameStateManager):
-    """Game state manager specifically for Daily mode with improved filtering logic."""
+class ApiGameStateManager(BaseGameStateManager):
+    """Game state manager for API modes with duplicate letter handling."""
 
     def __init__(
         self,
         initial_answers: list[str] | None = None,
         app_settings: Settings | None = None,
     ):
-        """Initialize the daily game state manager.
+        """Initialize the API game state manager.
 
         Args:
             initial_answers: Initial list of possible answers
@@ -35,37 +35,37 @@ class DailyGameStateManager(BaseGameStateManager):
         self._possible_answers: list[str] = (
             initial_answers or self.lexicon.get_all_answers()
         )
-        self._game_state: GameState = GameState(
+        self.game_state: GameState = GameState(
             possible_answers=self._possible_answers.copy()
         )
         self._guess_history: list[GuessResult] = []
 
     def _create_solver(self):
-        """Create solver engine for daily mode."""
+        """Create solver engine for API mode."""
         from core.algorithms.solver_engine import SolverEngine
 
         return SolverEngine(app_settings=self.settings)
 
     def add_guess_result(self, guess_result: GuessResult) -> None:
-        """Add a guess result and update possible answers with improved filtering.
+        """Add a guess result and update possible answers with API filtering.
 
         Args:
             guess_result: The result of a guess
         """
         self._guess_history.append(guess_result)
-        self._game_state.add_guess(guess_result)
+        self.game_state.add_guess(guess_result)
 
-        # Use strategy filtering for Daily mode
+        # Use strategy filtering for API mode
         self._possible_answers = self.filter_strategy.filter_answers(
             guess_result=guess_result,
             candidates=self._possible_answers,
         )
-        self._game_state.possible_answers = self._possible_answers.copy()
+        self.game_state.possible_answers = self._possible_answers.copy()
 
     def _is_answer_consistent_improved(
         self, guess_result: GuessResult, answer: str
     ) -> bool:
-        """Permissive consistency check tailored for Daily API behavior.
+        """Permissive consistency check tailored for API behavior.
 
         Rules (permissive to handle API duplicates/inconsistencies):
         - CORRECT: candidate[i] must equal guess[i]
@@ -128,7 +128,7 @@ class DailyGameStateManager(BaseGameStateManager):
         Returns:
             Current game state
         """
-        return self._game_state
+        return self.game_state
 
     def is_solved(self) -> bool:
         """Check if the game is solved.
@@ -136,7 +136,7 @@ class DailyGameStateManager(BaseGameStateManager):
         Returns:
             True if solved
         """
-        return self._game_state.is_solved
+        return self.game_state.is_solved
 
     def is_failed(self) -> bool:
         """Check if the game has failed.
@@ -144,7 +144,7 @@ class DailyGameStateManager(BaseGameStateManager):
         Returns:
             True if failed
         """
-        return self._game_state.is_failed
+        return self.game_state.is_failed
 
     def is_game_over(self) -> bool:
         """Check if the game is over.
@@ -152,7 +152,7 @@ class DailyGameStateManager(BaseGameStateManager):
         Returns:
             True if game is over
         """
-        return self._game_state.is_solved or self._game_state.is_failed
+        return self.game_state.is_solved or self.game_state.is_failed
 
     def get_game_summary(self) -> GameSummaryDict:
         """Get a summary of the current game state.
@@ -161,12 +161,12 @@ class DailyGameStateManager(BaseGameStateManager):
             Dictionary containing game summary
         """
         return {
-            "turn": self._game_state.turn,
+            "turn": self.game_state.turn,
             "total_guesses": len(self._guess_history),
             "remaining_answers": len(self._possible_answers),
-            "is_solved": self._game_state.is_solved,
-            "is_failed": self._game_state.is_failed,
-            "remaining_turns": self._game_state.remaining_turns,
+            "is_solved": self.game_state.is_solved,
+            "is_failed": self.game_state.is_failed,
+            "remaining_turns": self.game_state.remaining_turns,
             "guesses": [
                 {
                     "guess": gr.guess,

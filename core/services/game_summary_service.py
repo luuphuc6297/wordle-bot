@@ -3,7 +3,7 @@
 import time
 from typing import Union
 
-from core.algorithms.state_manager import DailyGameStateManager, GameStateManager
+from core.algorithms.state_manager import ApiGameStateManager, GameStateManager
 from core.domain.types import GameSummary, GuessHistoryItem
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.logging_config import get_logger
@@ -23,7 +23,7 @@ class GameSummaryService:
 
     def generate_summary(
         self,
-        game_state_manager: Union[GameStateManager, DailyGameStateManager],
+        game_state_manager: Union[GameStateManager, ApiGameStateManager],
         total_time: float,
         game_type: str = "standard",
     ) -> GameSummary:
