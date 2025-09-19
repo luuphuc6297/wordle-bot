@@ -7,7 +7,7 @@ import time
 
 from config.settings import Settings
 from core.algorithms.solver_engine import SolverEngine
-from core.algorithms.state_manager import GameStateManager
+from core.algorithms.state_manager import ApiGameStateManager
 from core.domain.types import SimulationResult
 from infrastructure.api.game_client import GameClient
 from infrastructure.data.word_lexicon import WordLexicon
@@ -71,7 +71,7 @@ class RandomHandler(BaseGameHandler):
             }
 
         # Step 2: Find the actual target word by trying all possible answers
-        game_manager = GameStateManager(app_settings=self.settings)
+        game_manager = ApiGameStateManager(app_settings=self.settings)
         game_manager.add_guess_result(random_result)
         possible_answers = game_manager.get_possible_answers()
 
@@ -133,7 +133,7 @@ class RandomHandler(BaseGameHandler):
         return None
 
     def _solve_target_word(
-        self, target_word: str, game_manager: GameStateManager, start_time: float
+        self, target_word: str, game_manager: ApiGameStateManager, start_time: float
     ) -> SimulationResult:
         """Solve the target word using entropy algorithm."""
         turn = 2

@@ -7,7 +7,7 @@ import time
 
 from config.settings import Settings
 from core.algorithms.solver_engine import SolverEngine
-from core.algorithms.state_manager import GameStateManager
+from core.algorithms.state_manager import ApiGameStateManager
 from core.domain.types import SimulationResult
 from infrastructure.api.game_client import GameClient
 from infrastructure.data.word_lexicon import WordLexicon
@@ -37,7 +37,7 @@ class WordHandler(BaseGameHandler):
             self.display.print_header()
             self.display.start_new_game(f"word_{target_answer}")
 
-        game_manager = GameStateManager()
+        game_manager = ApiGameStateManager()
         start = time.time()
         turn = 1
 

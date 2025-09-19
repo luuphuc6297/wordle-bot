@@ -8,7 +8,7 @@ from infrastructure.data.word_lexicon import WordLexicon
 from utils.logging_config import get_logger
 
 from .base import BaseGameStateManager, GameSummaryDict
-from .strategies import DailyApiFilterStrategy
+from .strategies import DuplicateFilterStrategy
 
 
 class DailyGameStateManager(BaseGameStateManager):
@@ -29,7 +29,7 @@ class DailyGameStateManager(BaseGameStateManager):
         self.logger = get_logger(__name__)
         self.lexicon: WordLexicon = WordLexicon()
         self.solver = self._create_solver()
-        self.filter_strategy: DailyApiFilterStrategy = DailyApiFilterStrategy()
+        self.filter_strategy: DuplicateFilterStrategy = DuplicateFilterStrategy()
 
         # Initialize with all possible answers
         self._possible_answers: list[str] = (

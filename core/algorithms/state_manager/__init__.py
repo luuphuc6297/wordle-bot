@@ -3,7 +3,7 @@
 This module contains game state managers for different game modes.
 """
 
-from .base import GameStateManager
+from .base import GameStateManager, ApiGameStateManager
 from .daily import DailyGameStateManager
 
-__all__ = ["GameStateManager", "DailyGameStateManager"]
+__all__ = ["ApiGameStateManager", "GameStateManager", "DailyGameStateManager"]

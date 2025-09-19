@@ -5,6 +5,7 @@ functionality for all game state managers.
 """
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 from config.settings import Settings
 from config.settings import settings as default_settings
@@ -32,6 +33,7 @@ class BaseGameStateManager(ABC):
         self.settings: Settings = app_settings or default_settings
         self.lexicon: WordLexicon = WordLexicon()
         self.solver: SolverEngine = SolverEngine(app_settings=self.settings)
+        self.filter_strategy: Any = None  # Will be set by subclasses
 
         initial_possible_answers = initial_answers or self.lexicon.answers
 
@@ -192,6 +194,43 @@ class GameStateManager(BaseGameStateManager):
         from .strategies import StandardFilterStrategy
 
         self.filter_strategy = StandardFilterStrategy(self.solver)
+
+    def add_guess_result(self, guess_result: GuessResult) -> None:
+        """Add a guess result and update possible answers.
+
+        Args:
+            guess_result: The result of the guess including feedback
+        """
+        # Add guess to game state
+        self.game_state.add_guess(guess_result)
+
+        # If game is over, don't filter further
+        if self.game_state.is_game_over:
+            return
+
+        # Filter possible answers based on the new feedback
+        self._filter_possible_answers(guess_result)
+
+
+class ApiGameStateManager(BaseGameStateManager):
+    """Game state manager for API modes with duplicate letter handling."""
+
+    def __init__(
+        self,
+        initial_answers: list[str] | None = None,
+        app_settings: Settings | None = None,
+    ):
+        """Initialize API game state manager.
+
+        Args:
+            initial_answers: Optional list of initial possible answers.
+            If None, uses all possible answers from lexicon.
+            app_settings: Application settings
+        """
+        super().__init__(initial_answers, app_settings)
+        from .strategies import DuplicateFilterStrategy
+
+        self.filter_strategy = DuplicateFilterStrategy()
 
     def add_guess_result(self, guess_result: GuessResult) -> None:
         """Add a guess result and update possible answers.

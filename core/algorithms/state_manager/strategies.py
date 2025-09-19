@@ -45,10 +45,10 @@ class StandardFilterStrategy:
         return filtered
 
 
-class DailyApiFilterStrategy:
-    """Permissive filtering tailored to the Daily API feedback behavior.
+class DuplicateFilterStrategy:
+    """Permissive filtering tailored to handle API duplicate letter inconsistencies.
 
-    Empirically, the Daily API may treat duplicates/ABSENT differently from
+    Empirically, APIs may treat duplicates/ABSENT differently from
     strict Wordle rules. This strategy enforces:
     - CORRECT: candidate[i] == guess[i]
     - PRESENT: letter present somewhere, and not at i
