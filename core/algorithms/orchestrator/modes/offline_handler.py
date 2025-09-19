@@ -12,10 +12,11 @@ from core.domain.models import EntropyCalculation
 from core.domain.types import SimulationResult
 from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay
-from utils.logging_config import get_logger
+
+from .base_handler import BaseGameHandler
 
 
-class OfflineHandler:
+class OfflineHandler(BaseGameHandler):
     """Handler for offline simulation mode."""
 
     def __init__(
@@ -25,11 +26,7 @@ class OfflineHandler:
         display: GameDisplay | None,
         settings: Settings,
     ) -> None:
-        self.solver = solver
-        self.lexicon = lexicon
-        self.display = display
-        self.settings = settings
-        self.logger = get_logger(__name__)
+        super().__init__(solver, lexicon, display, settings)
 
     def run_game(
         self, target_answer: str, game_id: str | None = None

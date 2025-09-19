@@ -14,8 +14,10 @@ from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay
 from utils.logging_config import get_logger
 
+from .base_handler import BaseGameHandler
 
-class WordHandler:
+
+class WordHandler(BaseGameHandler):
     """Handler for word target game mode."""
 
     def __init__(
@@ -26,12 +28,8 @@ class WordHandler:
         display: GameDisplay | None,
         settings: Settings,
     ) -> None:
+        super().__init__(solver, lexicon, display, settings)
         self.client = client
-        self.solver = solver
-        self.lexicon = lexicon
-        self.display = display
-        self.settings = settings
-        self.logger = get_logger(__name__)
 
     def run_game(self, target_answer: str) -> SimulationResult:
         """Play a game against a specific target using /word/{target}."""

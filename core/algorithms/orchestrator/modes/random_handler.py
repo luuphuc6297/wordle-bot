@@ -14,8 +14,10 @@ from infrastructure.data.word_lexicon import WordLexicon
 from utils.display import GameDisplay
 from utils.logging_config import get_logger
 
+from .base_handler import BaseGameHandler
 
-class RandomHandler:
+
+class RandomHandler(BaseGameHandler):
     """Handler for random game mode."""
 
     def __init__(
@@ -26,12 +28,8 @@ class RandomHandler:
         display: GameDisplay | None,
         settings: Settings,
     ) -> None:
+        super().__init__(solver, lexicon, display, settings)
         self.client = client
-        self.solver = solver
-        self.lexicon = lexicon
-        self.display = display
-        self.settings = settings
-        self.logger = get_logger(__name__)
 
     def run_game(self) -> SimulationResult:
         """Play a game using the random API mode (/random)."""
